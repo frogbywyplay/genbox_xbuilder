@@ -1,0 +1,6 @@
+*.pyc
+^build
+.coverage
+tests/xb_workdir
+tests/xb_tmp
+tests

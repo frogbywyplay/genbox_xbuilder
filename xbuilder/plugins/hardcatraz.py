@@ -23,6 +23,8 @@ import os
 from os.path import exists
 
 from shutil import copy
+from subprocess import Popen
+from xutils import XUtilsError
 
 from xbuilder.plugin import XBuilderPlugin
 

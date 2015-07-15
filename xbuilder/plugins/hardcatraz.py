@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2014 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2015 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -43,6 +43,7 @@ class XBuilderHardcatrazPlugin(XBuilderPlugin):
                         self.info('Running xexec %s'%check_rootfs)
                         self.log_fd.flush()
                         ret = Popen(['xexec', check_rootfs],
+                                    env=os.environ.copy(), # keep LC_ALL, etc.
                                     bufsize=-1, stdout=self.log_fd, stderr=self.log_fd, shell=False, cwd=None).wait()
                         if ret != 0:
                                 raise XUtilsError("failed to run hardcataz postbuild script")

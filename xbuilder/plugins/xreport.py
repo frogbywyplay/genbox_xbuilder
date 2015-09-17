@@ -18,7 +18,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #
-from __future__ import absolute_import, with_statement
+
 
 import bz2
 import contextlib

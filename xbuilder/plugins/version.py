@@ -31,18 +31,14 @@ from xbuilder.plugin import XBuilderPlugin
 class XBuilderXversionPlugin(XBuilderPlugin):
 
         def postbuild(self, build_info):
-		
-
                 self.info('Filling version in /etc/version')
                 rootdir = self.cfg['build']['workdir'] + '/root'
 		redistdir = rootdir + '/redist'
-		versionfile = rootdir + '/etc/' + os.path.dirname(os.readlink(rootdir + '/etc/make.profile')) + '/version'
-
+		versionfile = rootdir + '/etc/' + os.path.dirname(os.readlink(rootdir + '/etc/portage/make.profile')) + '/version'
 
 		if exists(versionfile):
 			copy(versionfile, rootdir + '/etc')
 			copy(versionfile, redistdir + '/etc')
-			
 
 		fd = open(rootdir + '/etc/version', 'a')
 		fd.write( build_info['version'] + '\n')

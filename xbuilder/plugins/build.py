@@ -21,6 +21,8 @@
 
 import os
 import readline
+import portage
+from portage.versions import pkgsplit
 from os.path import exists, realpath
 
 from subprocess import Popen, PIPE
@@ -38,8 +40,8 @@ class XBuilderBuildPlugin(XBuilderPlugin):
         def build(self, target_ebuild, target_builder, arch=None):
                 """ Build a target filesystem using the given target ebuild """
                 if not target_ebuild.endswith('.ebuild'):
-                        target_ebuild = target_builder.xportage.best_match(target_ebuild)
-                        target_ebuild = target_builder.xportage.portdb.findname(target_ebuild)
+                        target_list = portage.portdb.xmatch('match-all', target_ebuild)
+                        target_ebuild = portage.portdb.findname2(target_list[0])[0]
 
                 ebuild = ebuild_factory(target_ebuild)
                 eb_cpv = ebuild.get_cpv()
@@ -50,8 +52,6 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                 try:
                         self.log_fd.flush()
                         target_builder.create('=%s' % eb_cpv, arch, workdir)
-                        target_builder.set(workdir)
-                        target_builder.sync_overlay(workdir)
                 except XTargetError, e:
                         raise XUtilsError(error=str(e))
 
@@ -73,12 +73,17 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                            })
 
                 self.log_fd.flush()
-                ret = Popen(["xmerge", "-uvND", "world"], bufsize=BUILD_LOG_BUFSIZE,
+                ret = Popen(["xmerge", "--verbose", "--ignore-default-opts", "--no-replace", "world"], bufsize=BUILD_LOG_BUFSIZE,
                             stdout=self.log_fd, stderr=self.log_fd, shell=False,
-                            env=env,
-                            cwd=None).wait()
+                            env=env, cwd=None).wait()
                 if ret != 0:
                         raise XUtilsError("Target build failed, please see the log file %s" % self.log_file)
+
+                ret = Popen(["xtc-update", "--automode", "-5"], bufsize=BUILD_LOG_BUFSIZE,
+                            stdout=self.log_fd, stderr=self.log_fd, shell=False,
+                            env=env, cwd=None).wait()
+                if ret != 0:
+                        raise XUtilsError("Target auto-update config files failed, please see the log file %s" % self.log_file)
 
         def release(self, build_info):
                 """ Releasing rootfs.tgz """

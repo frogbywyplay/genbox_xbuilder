@@ -20,6 +20,8 @@
 #
 
 import os
+import portage
+
 from os.path import realpath, dirname, isfile, exists, expanduser
 from subprocess import Popen
 
@@ -30,6 +32,8 @@ from xtarget import XTargetBuilder, XTargetError, XTargetReleaseParser
 
 from xutils import XUtilsError, XUtilsConfig, info, vinfo, error
 from xutils.ebuild import ebuild_factory
+
+from xportage.xportage import XPortage
 
 from xintegtools.xbump import Xbump, XbumpWarn, XbumpError
 from xintegtools.xbump.consts import XBUMP_DEF_NAMING
@@ -67,6 +71,7 @@ class XBuilder(object):
                 self.log_fd = open(self.log_file, 'a')
 
                 self.target_builder = XTargetBuilder(arch=r'*', stdout=self.log_fd, stderr=self.log_fd)
+                self.xportage = XPortage(root = '/')
                 
                 self.info('Loading plugins:', eol=False)
                 for plugin in self.cfg['build']['plugins']:
@@ -152,8 +157,8 @@ class XBuilder(object):
                         print >>self.log_fd, msg,
 
         def __load_target_db(self, force=False):
-                if not self.target_builder.xportage.portdb or force:
-                        self.target_builder.xportage.create_trees()
+                if not self.xportage.portdb or force:
+                        self.xportage.create_trees()
 
         def __find_templates(self, pkg_atom):
                 self.__load_target_db()
@@ -161,9 +166,9 @@ class XBuilder(object):
                 for tgt, visible in self.target_builder.list_profiles_ng(pkg_atom, version=True, multi=False):
                         if not visible:
                                 continue
-                        eb_file = self.target_builder.xportage.portdb.findname(tgt)
+                        eb_file = portage.portdb.findname2(tgt)[0]
                         if eb_file is None:
-                                raise XUtilsError('Error in xportage.portdb.findname')
+                                raise XUtilsError('Error in portage.portdb.findname2')
                         ebuild = ebuild_factory(eb_file)
                         if ebuild is None:
                                 continue
@@ -208,8 +213,8 @@ class XBuilder(object):
                                 raise XUtilsError('Too many templates found for %s: %s' % (template, ' '.join(tpls)))
                         template = tpls[0]
                 # FIXME: need to define which variables from portage environment we want to provide to xbump
-                if self.target_builder.xportage.config.has_key('EHG_BASE_URI'):
-                        os.environ['EHG_BASE_URI'] = self.target_builder.xportage.config.get('EHG_BASE_URI')
+                if self.xportage.config.has_key('EHG_BASE_URI'):
+                        os.environ['EHG_BASE_URI'] = self.xportage.config.get('EHG_BASE_URI')
 
                 eb_dir = dirname(realpath(template))
                 xb = Xbump()

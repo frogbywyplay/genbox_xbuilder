@@ -73,7 +73,7 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                            })
 
                 self.log_fd.flush()
-                ret = Popen(["xmerge", "--verbose", "--ignore-default-opts", "--no-replace", "world"], bufsize=BUILD_LOG_BUFSIZE,
+                ret = Popen(["xmerge", "--verbose", "--ignore-default-opts", "--noreplace", "world"], bufsize=BUILD_LOG_BUFSIZE,
                             stdout=self.log_fd, stderr=self.log_fd, shell=False,
                             env=env, cwd=None).wait()
                 if ret != 0:

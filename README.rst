@@ -100,15 +100,6 @@ Configuration file relies on INI format and has the following available options:
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``release``        | ``archive_dir``           | ``/opt/xbuilder``                       | Place/directory to release target prebuilt tarball                            |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``compression``           | ``xz``                                  | Compression algorithm to use to compress rootfs. Available algorithm are:     |
-|                    |                           |                                         | ``bz2``, ``gz``, ``lzma``, ``lzo``, ``xz``.                                   |
-|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``tar_extra_opts``        | *None*                                  | Extra options to append to ``tar`` command used to generate target prebuilt   |
-|                    |                           |                                         | tarball.                                                                      |
-|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``flat_profile``          | ``False``                               | Copy prebuilt data into ``$prefix/$cat/$name/$version/$arch`` *(when set to   |
-|                    |                           |                                         | True)* instead of ``$prefix/$cat/$name/$version/$profile``.                   |
-|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tag_ebuilds``           | ``False``                               | Not used.                                                                     |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tag_overlays``          | ``False``                               | Not used.                                                                     |
@@ -123,23 +114,18 @@ Configuration file relies on INI format and has the following available options:
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``uri``                   | ``http://localhost/genbox-ng/xbuilder`` | Server to lookup to find more info about built target.                        |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-| ``jenkinsnotifier``| ``uri``                   | *None*                                  | Jenkins base URI to use to do our queries.                                    |
-|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``username``              | *None*                                  | Username to supply to the server for the authentication.                      |
-|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``usertoken``             | *None*                                  | Usertoken to supply as password. The token can be retrieved through           |
-|                    |                           |                                         | ``$uri/me/configure``.                                                        |
-|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``jobname``               | *None*                                  | Name of the job to trigger. If job name is based on target to build, you can  |
-|                    |                           |                                         | use ${category}, ${package}, ${version} or ${arch} in variable definition to  |
-|                    |                           |                                         | get a more dynamic variable.                                                  |
-+--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``notifier``       | ``uri``                   | ``http://localhost:9999/xbuilder``      | URL where to do the HTTP POST request.                                        |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``gpg``            | ``logfile``               | ``gpg.log``                             | When GPG plugin is used, logs are redirected to this file during GPG          |
 |                    |                           |                                         | encryption.                                                                   |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``loglevel``              | ``20``                                  | GnuPG logger verbosity level.                                                 |
++--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+| ``profilechecker`` | ``stop_on_warning``       | ``False``                               | Will raise an exception when set to True if profile-checker detects minor     |
+|                    |                           |                                         | problems in the profile.                                                      |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``stop_on_error``         | ``True``                                | Will raise an exception and so stop the build when set to True if             |
+|                    |                           |                                         | profile-checker detects major problems in the profile.                        |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 
 Jenkins notifier plugin
@@ -165,8 +151,6 @@ Currently, jenkins notifier plugin has the following limitations:
 
 Jenkins job configuration
 -------------------------
-
-In the job(s) you plan to trigger, you have to ensure that:
 
 * Job can be triggered remotely by checking the appropriate box in job configuration menu.
 * Job authentication token is a SHA1 hash of its name.

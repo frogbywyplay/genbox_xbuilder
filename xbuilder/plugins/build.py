@@ -33,6 +33,7 @@ from xutils.ebuild import ebuild_factory
 from xtarget import XTargetError
 
 from xbuilder.plugin import XBuilderPlugin
+from profilechecker.checker import ProfileChecker
 
 BUILD_LOG_BUFSIZE = 1024 * 1024 * 2 # 2Mo should be enough
 
@@ -54,6 +55,19 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                         target_builder.create('=%s' % eb_cpv, arch, workdir)
                 except XTargetError, e:
                         raise XUtilsError(error=str(e))
+
+                if self.cfg['build']['enable_profilechecker']:
+                    stop_on_warning = self.cfg['profilechecker']['stop_on_warning']
+                    stop_on_error = self.cfg['profilechecker']['stop_on_error']
+
+                    checker = ProfileChecker(workdir + '/root', output = self.log_fd)
+                    checker.parse()
+                    (has_warnings, has_errors) = checker.check_installed_versions()
+
+                    if stop_on_warning and has_warnings:
+                        raise XUtilsError('Profile does not meet expected quality requirements. Check %s' % self.log_file)
+                    if stop_on_error and has_errors:
+                        raise XUtilsError('Some packages will be installed at an unexpected version. Please fix your profile. For more information, check %s' % self.log_file)
 
                 env = os.environ.copy()
 

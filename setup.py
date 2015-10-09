@@ -106,7 +106,7 @@ def find_packages(dir):
 
 setup(
     name = "xbuilder",
-    version = "2.0.0",
+    version = "2.1.0",
     description = "Xbuilder tool for genbox",
     author = "Wyplay",
     author_email = "noreply@wyplay.com",

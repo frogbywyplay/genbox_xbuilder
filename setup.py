@@ -111,7 +111,7 @@ setup(
     author = "Wyplay",
     author_email = "noreply@wyplay.com",
     url = "http://www.wyplay.com",
-    install_requires = ['paramiko', 'portage']
+    install_requires = ['paramiko', 'portage'],
     packages = packages,
     scripts = [
                "scripts/xbuilder",

@@ -100,6 +100,7 @@ class XBuilder(object):
                             'build' : {},
                             'jenkinsnotifier': {},
                             'mail' : {},
+                            'mirror': {},
                             'notifier': {},
                             'release' : {},
 			    'gpg' : {},
@@ -130,6 +131,10 @@ class XBuilder(object):
                 self.cfg['mail']['to'] = cfg.get('mail', 'to', XBUILDER_MAIL_TO)
                 self.cfg['mail']['log_size'] = int(cfg.get('mail', 'log_size', XBUILDER_MAIL_LOG_SIZE))
                 self.cfg['mail']['uri'] = cfg.get('mail', 'uri', XBUILDER_MAIL_URI)
+                self.cfg['mirror']['user'] = cfg.get('mirror', 'user', '')
+                self.cfg['mirror']['server'] = cfg.get('mirror', 'server', '')
+                self.cfg['mirror']['pkey'] = cfg.get('mirror', 'pkey', '')
+                self.cfg['mirror']['base_dir'] = cfg.get('mirror', 'base_dir', '')
                 self.cfg['notifier']['uri'] = cfg.get('notifier', 'uri', XBUILDER_NOTIFIER_URI)
 		self.cfg['gpg']['logfile'] = cfg.get('gpg', 'logfile', os.path.join(self.cfg['build']['workdir'], XBUILDER_GPG_LOGFILE))
 		self.cfg['gpg']['loglevel'] = int(cfg.get('gpg', 'loglevel', XBUILDER_GPG_LOGLEVEL))

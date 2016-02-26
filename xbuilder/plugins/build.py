@@ -42,7 +42,10 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                 """ Build a target filesystem using the given target ebuild """
                 if not target_ebuild.endswith('.ebuild'):
                         target_list = portage.portdb.xmatch('match-all', target_ebuild)
-                        target_ebuild = portage.portdb.findname2(target_list[0])[0]
+                        try:
+                            target_ebuild = portage.portdb.findname2(target_list[0])[0]
+                        except IndexError:
+                            raise XUtilsError('%s does not match any ebuilds' % target_ebuild)
 
                 ebuild = ebuild_factory(target_ebuild)
                 eb_cpv = ebuild.get_cpv()

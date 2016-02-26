@@ -30,13 +30,12 @@ from portage_const import INCREMENTALS
 
 from xtarget import XTargetBuilder, XTargetError, XTargetReleaseParser
 
+from xintegtools.xbump import InvalidArgument, TargetEbuildUpdater
 from xutils import XUtilsError, XUtilsConfig, info, vinfo, error
 from xutils.ebuild import ebuild_factory
 
 from xportage.xportage import XPortage
 
-from xintegtools.xbump import Xbump, XbumpWarn, XbumpError
-from xintegtools.xbump.consts import XBUMP_DEF_NAMING
 from consts import *
 
 class XBuilder(object):
@@ -169,80 +168,34 @@ class XBuilder(object):
                 if not self.xportage.portdb or force:
                         self.xportage.create_trees()
 
-        def __find_templates(self, pkg_atom):
-                self.__load_target_db()
-                template = None
-                for tgt, visible in self.target_builder.list_profiles_ng(pkg_atom, version=True, multi=False):
-                        if not visible:
-                                continue
-                        eb_file = portage.portdb.findname2(tgt)[0]
-                        if eb_file is None:
-                                raise XUtilsError('Error in portage.portdb.findname2')
-                        ebuild = ebuild_factory(eb_file)
-                        if ebuild is None:
-                                continue
-                        if ebuild.get_type() == 'target' and ebuild.is_template():
-                                if not template:
-                                        template = [ eb_file ]
-                                else:
-                                        template.append(eb_file)
-
-                return template
-
-        def run(self, pkg_atom, version=None, arch=None, name=None):
-                if not name:
-                        name = XBUMP_DEF_NAMING
-                ebuild = self.create_desc(pkg_atom, version, name)
+        def run(self, pkg_atom, version=None, arch=None, name=str()):
+                ebuild = str()
+                if not pkg_atom.startswith('='):
+                    ebuild = self.create_desc(pkg_atom, version, name)
                 if not ebuild:
-                        ebuild = pkg_atom
+                    ebuild = pkg_atom
+                print ebuild
                 self.prebuild(ebuild, arch)
                 self.build(ebuild, arch)
                 self.postbuild()
                 self.release()
                 return self.build_info['success']
 
-        def create_desc(self, template, version=None, name=XBUMP_DEF_NAMING):
+        def create_desc(self, template, version=None, name=str()):
                 """Create a new target description with xbump
                 """
-                if template.endswith('.ebuild'):
-                        if not isfile(template):
-                                raise XUtilsError('Can\'t find ebuild file %s' % template)
-                        ebuild = ebuild_factory(template)
-                        if not ebuild:
-                                raise XUtilsError('Unkown ebuild type')
-                        elif not ebuild.is_template():
-                                # Don't create any desc, the ebuild doesn't seem to be a template
-                                return None
-                else:
-                        tpls = self.__find_templates(template)
-                        if not tpls:
-                                # Don't create any desc, let's try to build the best_match
-                                return None
-                        if len(tpls) > 1:
-                                raise XUtilsError('Too many templates found for %s: %s' % (template, ' '.join(tpls)))
-                        template = tpls[0]
-                # FIXME: need to define which variables from portage environment we want to provide to xbump
-                if self.xportage.config.has_key('EHG_BASE_URI'):
-                        os.environ['EHG_BASE_URI'] = self.xportage.config.get('EHG_BASE_URI')
-
-                eb_dir = dirname(realpath(template))
-                xb = Xbump()
                 try:
-                        eb_name = xb.update(template, version, force=True, name=name)
-                except XbumpWarn, e:
-                        raise XUtilsError(error=str(e), error_log=e.get_log())
-                except XbumpError, e:
-                        raise XUtilsError(error=str(e), error_log=e.get_log())
-
-
-                self.info('Target description created: %s' % eb_name)
-                if self.type == 'beta' and self.cfg['target']['max_beta'] > 0:
-                        self.info('Cleaning old targets')
-                        # TODO delete old targets from repo
-
-                # Rebuild the target db (new ebuilds and some might have been deleted)
+                    updater = TargetEbuildUpdater(template)
+                except InvalidArgument,e:
+                    raise XUtilsError(error=e.message)
+                if not updater.is_target_ebuild():
+                    raise XUtilsError('%s does not conform with target ebuild definition.' % updater.template.abspath)
+                updater.update_overlays(version[1])
+                updater.update_revision(version[0])
+                new_version = updater.compute_version(False, name[5:] if name else str())
+                new_ebuild = updater.release_ebuild(new_version, True)
                 self.__load_target_db(force=True)
-                return eb_dir + '/' + eb_name + '.ebuild'
+                return new_ebuild
 
         def prebuild(self, target_ebuild, arch=None):
                 self.info('Running prebuild step')

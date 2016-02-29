@@ -43,11 +43,20 @@ class XBuilderGnuPGPlugin(XBuilderPlugin):
                 if build_info['success'] != True:
                         return
                 workdir = self.cfg['build']['workdir']
-                if not os.path.isdir(os.path.join(workdir, 'root/etc/portage/gpg')):
+                arch = build_info.get('arch', '')
+                pkg_name = build_info.get('pkg_name', '')
+                gpg_path = ''
+                for path in ('root/etc/portage/%s/%s/gpg' % (pkg_name, arch),
+                             'root/etc/portage/gpg'):
+                        path = os.path.join(workdir, path)
+                        if os.path.isdir(path):
+                                gpg_path = path
+                                break
+                if not gpg_path:
                         self.info('No encryption on this target')
                         return
                 self.redirect_logging()
-                keys = os.path.join(workdir, 'root/etc/portage/gpg/pubring.gpg')
+                keys = '%s/pubring.gpg' % gpg_path
                 self.gpg = gnupg.GPG(externalkeyring=keys)
                 self.gpg_allkeyids = [i['keyid'] for i in self.gpg.list_keys()]
                 if not self.gpg_allkeyids:

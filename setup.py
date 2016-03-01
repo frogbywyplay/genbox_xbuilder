@@ -106,12 +106,12 @@ def find_packages(dir):
 
 setup(
     name = "xbuilder",
-    version = "2.1.1",
+    version = "2.1.2",
     description = "Xbuilder tool for genbox",
     author = "Wyplay",
     author_email = "noreply@wyplay.com",
     url = "http://www.wyplay.com",
-    install_requires = ['paramiko', 'portage'],
+    install_requires = ['paramiko', 'portage', 'requests'],
     packages = packages,
     scripts = [
                "scripts/xbuilder",

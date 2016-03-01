@@ -122,6 +122,17 @@ Configuration file relies on INI format and has the following available options:
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``base_dir``              | *None*                                  | Base directory on the remote ``server`` for prebuild mirroring.               |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+| ``jenkinsnotifier``| ``uri``                   | *None*                                  | Jenkins base URI to use to do our queries.                                    |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``username``              | *None*                                  | Username to supply to the server for the authentication.                      |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``usertoken``             | *None*                                  | Usertoken to supply as password. The token can be retrieved through           |
+|                    |                           |                                         | ``$uri/me/configure``.                                                        |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``jobname``               | *None*                                  | Name of the job to trigger. If job name is based on target to build, you can  |
+|                    |                           |                                         | use ${category}, ${package}, ${version} or ${arch} in variable definition to  |
+|                    |                           |                                         | get a more dynamic variable.                                                  |
++--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``notifier``       | ``uri``                   | ``http://localhost:9999/xbuilder``      | URL where to do the HTTP POST request.                                        |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``gpg``            | ``logfile``               | ``gpg.log``                             | When GPG plugin is used, logs are redirected to this file during GPG          |
@@ -159,6 +170,8 @@ Currently, jenkins notifier plugin has the following limitations:
 
 Jenkins job configuration
 -------------------------
+
+In the job(s) you plan to trigger, you have to ensure that:
 
 * Job can be triggered remotely by checking the appropriate box in job configuration menu.
 * Job authentication token is a SHA1 hash of its name.

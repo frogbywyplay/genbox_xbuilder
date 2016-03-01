@@ -22,6 +22,7 @@
 from hashlib import sha1
 from re import compile
 from requests import codes, get, post
+from simplejson import loads
 from xbuilder.plugin import XBuilderPlugin
 from xutils import output, XUtilsError
 
@@ -47,7 +48,7 @@ class Jenkins(object):
         if request.status_code != codes.ok:
             output.warn('jenkinsnotifier: Unable to get crumb issuer.')
             return dict()
-        return {request.json()['crumbRequestField']: request.json()['crumb']}
+        return {loads(request.text)['crumbRequestField']: loads(request.text)['crumb']}
 
     def is_token(self, token):
         if len(token) != 32:
@@ -66,7 +67,7 @@ class Jenkins(object):
             output.error('jenkinsnotifier: Unable to get uri %s.' % uri)
             output.error('jenkinsnotifier: Error %d: %s.' % (request.status_code, request.reason))
             return self.jobs
-        self.jobs = request.json()['jobs']
+        self.jobs = loads(request.text)['jobs']
         return self.jobs
 
     def build(self, job, uri = str()):

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2014 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2016 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -90,6 +90,7 @@ class XBuilder(object):
                 self.cfg = {
                             'target' : {},
                             'build' : {},
+                            'jenkinsnotifier': {},
                             'mail' : {},
                             'notifier': {},
                             'release' : {},
@@ -107,6 +108,10 @@ class XBuilder(object):
                 self.cfg['release']['tag_overlays'] = cfg.get('release', 'tag_overlays', False)
                 self.cfg['release']['tag_ebuilds'] = cfg.get('release', 'tag_ebuilds', False)
 
+                self.cfg['jenkinsnotifier']['uri'] = cfg.get('jenkinsnotifier', 'uri', str())
+                self.cfg['jenkinsnotifier']['username'] = cfg.get('jenkinsnotifier', 'username', str())
+                self.cfg['jenkinsnotifier']['usertoken'] = cfg.get('jenkinsnotifier', 'usertoken', str())
+                self.cfg['jenkinsnotifier']['jobname'] = cfg.get('jenkinsnotifier', 'jobname', str())
                 self.cfg['mail']['smtp'] = cfg.get('mail', 'smtp', XBUILDER_MAIL_SMTP)
                 self.cfg['mail']['to'] = cfg.get('mail', 'to', XBUILDER_MAIL_TO)
                 self.cfg['mail']['log_size'] = int(cfg.get('mail', 'log_size', XBUILDER_MAIL_LOG_SIZE))

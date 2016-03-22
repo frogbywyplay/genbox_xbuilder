@@ -34,7 +34,6 @@ MAIL_BODY = "This message was sent automatically by a builder, please do not rep
 MAIL_BODY_FAILED = """See log file at %(uri)s/%(category)s/%(pkg_name)s/%(version)s/%(arch)s/build.log.bz2
 This message was sent automatically by a builder, please do not reply."""
 
-MAIL_FROM = "builder@integration"
 MAIL_MSG_OK = "[Build] OK on %s for %s at %s"
 MAIL_MSG_NOK = "[Build] FAILED on %s for %s at %s"
 
@@ -63,7 +62,7 @@ class XBuilderMailPlugin(XBuilderPlugin):
                 s = smtplib.SMTP(self.cfg['mail']['smtp'])
                 msg = MIMEMultipart()
 
-                msg['From'] = MAIL_FROM
+                msg['From'] = os.getenv('MAIL_FROM', self.cfg['mail']['from'])
                 msg['To'] = os.getenv('MAIL_TO', self.cfg['mail']['to'])
 
                 if build_info['success']:

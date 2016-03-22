@@ -113,6 +113,7 @@ class XBuilder(object):
                 self.cfg['jenkinsnotifier']['usertoken'] = cfg.get('jenkinsnotifier', 'usertoken', str())
                 self.cfg['jenkinsnotifier']['jobname'] = cfg.get('jenkinsnotifier', 'jobname', str())
                 self.cfg['mail']['smtp'] = cfg.get('mail', 'smtp', XBUILDER_MAIL_SMTP)
+                self.cfg['mail']['from'] = cfg.get('mail', 'from', XBUILDER_MAIL_FROM)
                 self.cfg['mail']['to'] = cfg.get('mail', 'to', XBUILDER_MAIL_TO)
                 self.cfg['mail']['log_size'] = int(cfg.get('mail', 'log_size', XBUILDER_MAIL_LOG_SIZE))
                 self.cfg['mail']['uri'] = cfg.get('mail', 'uri', XBUILDER_MAIL_URI)

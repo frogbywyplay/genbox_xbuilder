@@ -39,6 +39,7 @@ XBUILDER_FEATURES = ''
 XBUILDER_WORKDIR = "/usr/targets/xbuilder"
 XBUILDER_ARCHIVE_DIR = "/opt/xbuilder"
 
+XBUILDER_MAIL_FROM = "builder@wyplay.com"
 XBUILDER_MAIL_TO = "integration@wyplay.com"
 XBUILDER_MAIL_SMTP = "localhost"
 XBUILDER_MAIL_LOG_SIZE = 20 * 1024

@@ -93,7 +93,7 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                 debugfs_file = '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
                 dest_dir = "/".join([archive, build_info['category'],
                         build_info['pkg_name'], build_info['version'],
-                        build_info['arch']])
+                        build_info['profile']])
 
                 if not exists(dest_dir):
                         os.makedirs(dest_dir)

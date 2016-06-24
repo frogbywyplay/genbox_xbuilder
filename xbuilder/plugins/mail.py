@@ -74,7 +74,7 @@ class XBuilderMailPlugin(XBuilderPlugin):
                                                             'category': build_info['category'],
                                                             'pkg_name': build_info['pkg_name'],
                                                             'version': build_info['version'],
-                                                            'arch': build_info['arch']})
+                                                            'arch': build_info['profile']})
                         if exists(self.log_file):
 				self.log_fd.flush()
                                 fd = open(self.log_file, 'r')
@@ -89,7 +89,7 @@ class XBuilderMailPlugin(XBuilderPlugin):
 
                 body.add_header('Content-Disposition', 'inline')
                 msg.attach(body)
-                msg['Subject'] = subject % (build_name, build_info['arch'], build_time)
+                msg['Subject'] = subject % (build_name, build_info['profile'], build_time)
 
                 s.sendmail(msg['From'], msg['To'], msg.as_string())
                 s.quit()

@@ -23,6 +23,9 @@ import os
 from os.path import realpath, dirname, isfile, exists, expanduser
 from subprocess import Popen
 
+from portage import config
+from portage_const import INCREMENTALS
+
 from xtarget import XTargetBuilder, XTargetError, XTargetReleaseParser
 
 from xutils import XUtilsError, XUtilsConfig, info, vinfo, error
@@ -262,6 +265,12 @@ class XBuilder(object):
 		if not self.build_info.has_key('version'):
                 	self.build_info['version'] = release['version']
                 self.build_info['arch'] = release['arch']
+                # profile_directory is: myroot + /etc/portage + pkg_name + profile
+                # we just want to keep profile part.
+                myroot = '%s/%s' % (workdir, 'root')
+                profile_directory = config(config_root=myroot, target_root=myroot, config_incrementals=INCREMENTALS).profiles[-1]
+                base = realpath('%s/%s/%s' % (myroot, '/etc/portage', pn))
+                self.build_info['profile'] = profile_directory[len(base) + 1:]
 
         def postbuild(self):
                 self.info('Running postbuild step')

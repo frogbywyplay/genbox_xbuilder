@@ -38,6 +38,7 @@ XBUILDER_FEATURES = ''
 
 XBUILDER_WORKDIR = "/usr/targets/xbuilder"
 XBUILDER_ARCHIVE_DIR = "/opt/xbuilder"
+XBUILDER_COMPRESSION = "xz"
 
 XBUILDER_MAIL_FROM = "builder@wyplay.com"
 XBUILDER_MAIL_TO = "integration@wyplay.com"

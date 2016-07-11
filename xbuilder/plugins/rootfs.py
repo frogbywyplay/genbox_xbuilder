@@ -41,6 +41,7 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
         def postbuild(self, build_info):
                 """ Generating rootfs.tgz """
                 workdir = self.cfg['build']['workdir']
+                compression = self.cfg['release']['compression']
 
                 if build_info['success'] != True:
                         workdir = realpath(workdir)
@@ -62,9 +63,9 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
 
             	    if os.path.isdir ( workdir + '/root/usr/lib/debug' ):
 		        self.info('Creating debuginfo archive')
-                        debugfs_file = '%s-%s_debuginfo.tar.gz' % (build_info['pkg_name'], build_info['version'])
+                        debugfs_file = '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
     	                self.log_fd.flush()
-        	        ret = Popen(['tar', 'cfzp',
+                        ret = Popen(['tar', 'cfap',
                             workdir + '/' + debugfs_file,
                             '-C', workdir, 'root/usr/lib/debug'],
                             bufsize=-1, stdout=self.log_fd, stderr=self.log_fd, shell=False, cwd=None
@@ -74,9 +75,9 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
                     	    raise XUtilsError("Something went wrong while creating the debuginfo archive")
 
                     self.info('Creating rootfs archive')
-                    rootfs_file = '%s-%s_root.tar.gz' % (build_info['pkg_name'], build_info['version'])
+                    rootfs_file = '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
                     self.log_fd.flush()
-		    tar_cmd = ['tar', 'cfzp', workdir + '/' + rootfs_file, '-C', workdir, 'root']
+		    tar_cmd = ['tar', 'cfap', workdir + '/' + rootfs_file, '-C', workdir, 'root']
 		    tar_extra_opts = self.cfg['release']['tar_extra_opts']
 		    if tar_extra_opts: tar_cmd.append(tar_extra_opts)
 		    ret = Popen(tar_cmd,

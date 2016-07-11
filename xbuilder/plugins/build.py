@@ -86,10 +86,11 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                         return
 
                 archive = self.cfg['release']['archive_dir']
+                compression = self.cfg['release']['compression']
                 workdir = self.cfg['build']['workdir']
 
-                rootfs_file = '%s-%s_root.tar.gz' % (build_info['pkg_name'], build_info['version'])
-                debugfs_file = '%s-%s_debuginfo.tar.gz' % (build_info['pkg_name'], build_info['version'])
+                rootfs_file = '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
+                debugfs_file = '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
                 dest_dir = "/".join([archive, build_info['category'],
                         build_info['pkg_name'], build_info['version'],
                         build_info['arch']])

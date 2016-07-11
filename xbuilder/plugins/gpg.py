@@ -85,7 +85,7 @@ class XBuilderGnuPGPlugin(XBuilderPlugin):
         def process_file(self, type, build_info):
                 fn = os.path.join(
                         self.cfg['build']['workdir'],
-                        '%s-%s_%s.tar.gz' % (build_info['pkg_name'], build_info['version'], type))
+                        '%s-%s_%s.tar.%s' % (build_info['pkg_name'], build_info['version'], type, self.cfg['release']['compression']))
                 if type == 'debuginfo' and not os.path.isfile(fn):
                         return
                 if not os.path.isfile(fn):

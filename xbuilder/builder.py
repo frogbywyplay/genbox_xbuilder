@@ -115,6 +115,7 @@ class XBuilder(object):
                 self.cfg['build']['enable_profilechecker'] = cfg.get('build', 'enable_profilechecker', True) == 'True'
 
                 self.cfg['release']['archive_dir'] = cfg.get('release', 'archive_dir', XBUILDER_ARCHIVE_DIR)
+                self.cfg['release']['compression'] = cfg.get('release', 'compression', XBUILDER_COMPRESSION)
                 self.cfg['release']['tar_extra_opts'] = cfg.get('release', 'tar_extra_opts', str())
                 self.cfg['release']['tag_overlays'] = cfg.get('release', 'tag_overlays', False)
                 self.cfg['release']['tag_ebuilds'] = cfg.get('release', 'tag_ebuilds', False)

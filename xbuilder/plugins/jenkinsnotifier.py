@@ -114,4 +114,4 @@ class XBuilderJenkinsNotifierPlugin(XBuilderPlugin):
         return
 
 def register(builder):
-    builder.add_plugin(XBuilderNotifierPlugin)
+    builder.add_plugin(XBuilderJenkinsNotifierPlugin)

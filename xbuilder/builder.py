@@ -110,6 +110,7 @@ class XBuilder(object):
                 self.cfg['release']['archive_dir'] = cfg.get('release', 'archive_dir', XBUILDER_ARCHIVE_DIR)
                 self.cfg['release']['compression'] = cfg.get('release', 'compression', XBUILDER_COMPRESSION)
                 self.cfg['release']['tar_extra_opts'] = cfg.get('release', 'tar_extra_opts', str())
+                self.cfg['release']['flat_profile'] = cfg.get('release', 'flat_profile', False)
                 self.cfg['release']['tag_overlays'] = cfg.get('release', 'tag_overlays', False)
                 self.cfg['release']['tag_ebuilds'] = cfg.get('release', 'tag_ebuilds', False)
 
@@ -265,12 +266,15 @@ class XBuilder(object):
 		if not self.build_info.has_key('version'):
                 	self.build_info['version'] = release['version']
                 self.build_info['arch'] = release['arch']
-                # profile_directory is: myroot + /etc/portage + pkg_name + profile
-                # we just want to keep profile part.
-                myroot = '%s/%s' % (workdir, 'root')
-                profile_directory = config(config_root=myroot, target_root=myroot, config_incrementals=INCREMENTALS).profiles[-1]
-                base = realpath('%s/%s/%s' % (myroot, '/etc/portage', pn))
-                self.build_info['profile'] = profile_directory[len(base) + 1:]
+                if self.cfg['release']['flat_profile']:
+                    self.build_info['profile'] = self.build_info['arch']
+                else:
+                    # profile_directory is: myroot + /etc/portage + pkg_name + profile
+                    # we just want to keep profile part.
+                    myroot = '%s/%s' % (workdir, 'root')
+                    profile_directory = config(config_root=myroot, target_root=myroot, config_incrementals=INCREMENTALS).profiles[-1]
+                    base = realpath('%s/%s/%s' % (myroot, '/etc/portage', pn))
+                    self.build_info['profile'] = profile_directory[len(base) + 1:]
 
         def postbuild(self):
                 self.info('Running postbuild step')

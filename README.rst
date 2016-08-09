@@ -97,10 +97,13 @@ Configuration file relies on INI format and has the following available options:
 | ``release``        | ``archive_dir``           | ``/opt/xbuilder``                       | Place/directory to release target prebuilt tarball                            |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``compression``           | ``xz``                                  | Compression algorithm to use to compress rootfs. Available algorithm are:     |
-|                    |                           |                                         | ``bz2``, ``gz``, ``lzma``, ``lzo``, ``xz``.                                             |
+|                    |                           |                                         | ``bz2``, ``gz``, ``lzma``, ``lzo``, ``xz``.                                   |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tar_extra_opts``        | *None*                                  | Extra options to append to ``tar`` command used to generate target prebuilt   |
 |                    |                           |                                         | tarball.                                                                      |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``flat_profile``          | ``False``                               | Copy prebuilt data into $prefix/$cat/$name/$version/$arch (when set to True)  |
+|                    |                           |                                         | instead of $prefix/$cat/$name/$version/$profile.                              |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tag_ebuilds``           | ``False``                               | Not used.                                                                     |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+

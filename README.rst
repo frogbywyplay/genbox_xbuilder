@@ -102,8 +102,8 @@ Configuration file relies on INI format and has the following available options:
 |                    | ``tar_extra_opts``        | *None*                                  | Extra options to append to ``tar`` command used to generate target prebuilt   |
 |                    |                           |                                         | tarball.                                                                      |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``flat_profile``          | ``False``                               | Copy prebuilt data into $prefix/$cat/$name/$version/$arch (when set to True)  |
-|                    |                           |                                         | instead of $prefix/$cat/$name/$version/$profile.                              |
+|                    | ``flat_profile``          | ``False``                               | Copy prebuilt data into ``$prefix/$cat/$name/$version/$arch`` *(when set to   |
+|                    |                           |                                         | True)* instead of ``$prefix/$cat/$name/$version/$profile``.                   |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tag_ebuilds``           | ``False``                               | Not used.                                                                     |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+

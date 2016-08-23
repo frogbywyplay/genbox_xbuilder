@@ -69,13 +69,24 @@ class Jenkins(object):
         self.jobs = request.json()['jobs']
         return self.jobs
 
-    def build(self, job, uri = str()):
+    def getjobinfo(self, job):
+        uri = '%s/job/%s/api/json' % (self.server, job)
+	request = get(uri, auth = self.credentials)
+	if request.status_code != codes.ok:
+	    output.error('jenkinsnotifier: Unable to get uri %s.' % uri)
+	    output.error('jenkinsnotifier: Error %d: %s.' % (request.status_code, request.reason))
+	    return self.jobs
+	return loads(request.text)
+
+    def build(self, job, uri = str(), jobparams = {}):
         if not uri:
             uri = '%s/job/%s/build' % (self.server, job)
         params = self.crumb
         params['delay'] = 60 #set a 60s delay to ensure release phase from build plugin is done
         params['token'] = create_sha1(job)
         params['cause'] = 'xbuilder released a prebuilt.'
+	if jobparams != {}:
+	    params['json']='{"parameter": [{"name":"TARGET_NAME", "value":"%s"}, {"name":"TARGET_ARCH", "value":"%s"}, {"name":"VERSION", "value":"%s"}]}' % (jobparams['name'], jobparams['arch'], jobparams['version'])
         request = post(uri, auth = self.credentials, data = params)
         if request.status_code != 201:
             output.error('jenkinsnotifier: Unable to build %s with uri %s.' % (job, uri))
@@ -104,8 +115,14 @@ class XBuilderJenkinsNotifierPlugin(XBuilderPlugin):
                 jobname += my_match[substring] if substring in my_match.keys() else substring
             for job in self.jenkins.listjobs():
                 if job['name'] == jobname:
-                    output.info('jenkinsnotifier: will trigger job %s.' % jobname)
-                    self.jenkins.build(job['name'], job['uri'])
+		    actions = self.jenkins.getjobinfo(job['name'])['actions'][0]
+		    withparams = "with" if 'parameterDefinitions' in actions else "without"
+                    output.info('jenkinsnotifier: will trigger job %s %s parameters (%s).' % (jobname, withparams, job['url']))
+		    if 'parameterDefinitions' in actions:
+		        targetname = build_info['category'] + "/" + build_info['pkg_name']
+                        self.jenkins.build(job['name'], job['url']+"/build", {'name':targetname, 'arch':build_info['arch'], 'version':build_info['version']})
+		    else:
+                        self.jenkins.build(job['name'], job['url']+"/build")
                     return
             output.warn('jenkinsnotifier: job not found on server %s', self.params['uri'])
             return

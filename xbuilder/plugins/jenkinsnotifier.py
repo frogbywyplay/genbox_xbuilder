@@ -86,7 +86,7 @@ class Jenkins(object):
         params['delay'] = 60 #set a 60s delay to ensure release phase from build plugin is done
         params['token'] = create_sha1(job)
         params['cause'] = 'xbuilder released a prebuilt.'
-        if jobparams != {}:
+        if jobparams:
             params['json']='{"parameter": [{"name":"TARGET_NAME", "value":"%s"}, {"name":"TARGET_ARCH", "value":"%s"}, {"name":"VERSION", "value":"%s"}]}' % (jobparams['name'], jobparams['arch'], jobparams['version'])
         request = post(uri, auth = self.credentials, data = params)
         if request.status_code != 201:

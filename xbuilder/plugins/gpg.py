@@ -2,17 +2,17 @@
 #
 # Copyright (C) 2006-2014 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
-# 
+#
 # xbuilder is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # xbuilder is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; see file COPYING.
 # If not, see <http://www.gnu.org/licenses/>.
@@ -22,6 +22,11 @@
 import os
 
 import gnupg
+
+import portage_util
+
+from portage import config
+from portage_const import INCREMENTALS
 
 from os.path import exists, realpath
 
@@ -42,22 +47,22 @@ class XBuilderGnuPGPlugin(XBuilderPlugin):
                 """ Encryption of rootfs.tgz """
                 if build_info['success'] != True:
                         return
+                keysfile = ''
                 workdir = self.cfg['build']['workdir']
-                arch = build_info.get('arch', '')
-                pkg_name = build_info.get('pkg_name', '')
-                gpg_path = ''
-                for path in ('root/etc/portage/%s/%s/gpg' % (pkg_name, arch),
-                             'root/etc/portage/gpg'):
-                        path = os.path.join(workdir, path)
-                        if os.path.isdir(path):
-                                gpg_path = path
+                target_root = os.path.join(workdir, 'root')
+                profile_paths = config(config_root=target_root, target_root=target_root, config_incrementals=INCREMENTALS).profiles
+                paths = [os.path.join(workdir,'root/etc/portage/gpg')]
+                paths.extend(profile_paths)
+                for path in paths[-1::-1]:
+                        path = os.path.join(path, 'pubring.gpg')
+                        if os.path.isfile(path):
+                                keysfile = path
                                 break
-                if not gpg_path:
+                if not keysfile:
                         self.info('No encryption on this target')
                         return
                 self.redirect_logging()
-                keys = '%s/pubring.gpg' % gpg_path
-                self.gpg = gnupg.GPG(externalkeyring=keys)
+                self.gpg = gnupg.GPG(externalkeyring=keysfile)
                 self.gpg_allkeyids = [i['keyid'] for i in self.gpg.list_keys()]
                 if not self.gpg_allkeyids:
                         self.clean_up()

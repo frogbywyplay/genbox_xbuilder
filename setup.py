@@ -2,17 +2,17 @@
 #
 # Copyright (C) 2006-2016 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
-# 
+#
 # xbuilder is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # xbuilder is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; see file COPYING.
 # If not, see <http://www.gnu.org/licenses/>.
@@ -106,7 +106,7 @@ def find_packages(dir):
 
 setup(
     name = "xbuilder",
-    version = "1.2.14",
+    version = "1.2.15",
     description = "Xbuilder tool for genbox",
     author = "Wyplay",
     author_email = "noreply@wyplay.com",
@@ -119,7 +119,7 @@ setup(
     data_files = [
                   ('/etc', [ 'config/xbuilder.conf' ])
                  ],
-    long_description = """xbuilder tools for genbox""", 
+    long_description = """xbuilder tools for genbox""",
     cmdclass = { 'test' : TestCommand }
-) 
+)
 

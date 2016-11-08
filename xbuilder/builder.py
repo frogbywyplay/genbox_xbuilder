@@ -137,7 +137,7 @@ class XBuilder(object):
 		self.cfg['gpg']['logfile'] = cfg.get('gpg', 'logfile', os.path.join(self.cfg['build']['workdir'], XBUILDER_GPG_LOGFILE))
 		self.cfg['gpg']['loglevel'] = int(cfg.get('gpg', 'loglevel', XBUILDER_GPG_LOGLEVEL))
 
-                self.cfg['profilechecker']['stop_on_warning'] = cfg.get('profilechecker', 'stop_on_warning', False) == 'True'
+                self.cfg['profilechecker']['stop_on_warning'] = cfg.get('profilechecker', 'stop_on_warning', True) == 'True'
                 self.cfg['profilechecker']['stop_on_error'] = cfg.get('profilechecker', 'stop_on_error', True) == 'True'
 		del cfg
 

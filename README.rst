@@ -143,11 +143,12 @@ Configuration file relies on INI format and has the following available options:
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``loglevel``              | ``20``                                  | GnuPG logger verbosity level.                                                 |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-| ``profilechecker`` | ``stop_on_warning``       | ``False``                               | Will raise an exception when set to True if profile-checker detects minor     |
-|                    |                           |                                         | problems in the profile.                                                      |
+| ``profilechecker`` | ``stop_on_warning``       | ``True``                                | Will raise an exception when set to True if profile-checker detects missing   |
+|                    |                           |                                         | package declaration in the profile.                                           |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``stop_on_error``         | ``True``                                | Will raise an exception and so stop the build when set to True if             |
-|                    |                           |                                         | profile-checker detects major problems in the profile.                        |
+|                    |                           |                                         | profile-checker detects that a package will be installed at an unexpected     |
+|                    |                           |                                         | version.                                                                      |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 
 Jenkins notifier plugin

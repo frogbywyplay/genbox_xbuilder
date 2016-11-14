@@ -22,7 +22,8 @@
 import os
 import readline
 import portage
-from portage.versions import pkgsplit
+from portage import config
+from portage.versions import vercmp
 from os.path import exists, realpath
 
 from subprocess import Popen, PIPE
@@ -34,12 +35,49 @@ from xtarget import XTargetError
 
 from xbuilder.plugin import XBuilderPlugin
 from profilechecker.checker import ProfileChecker
+from profilechecker.package import Package, Packages, PackagesFile, PackageMaskFile, PackageUnmaskFile
 
 BUILD_LOG_BUFSIZE = 1024 * 1024 * 2 # 2Mo should be enough
 
 class XBuilderBuildPlugin(XBuilderPlugin):
         def build(self, target_ebuild, target_builder, arch=None):
                 """ Build a target filesystem using the given target ebuild """
+                def automask(myroot):
+                    cfg = config(config_root=unicode(myroot), target_root=unicode(myroot))
+                    for directory in cfg.profiles:
+                        mask_pkgs = Packages()
+                        unmask_pkgs = Packages()
+                        pf = PackagesFile(directory)
+                        for package in pf.list_pkgs().list():
+                            if package.version:
+                                if package.operator == '=' and not package.removal:
+                                    mask_pkgs += Package(package.name, version=package.version, operator='>')
+                                if package.operator == '=' and package.removal:
+                                    lowest_version = str()
+                                    for pkg in pf.list_pkgs().lookup(package.name):
+                                        lowest_version = package.version if vercmp(package.version, pkg.version) <= 0 else pkg.version
+                                    if package.version == lowest_version:
+                                        continue
+                                    else:
+                                        unmask_pkgs += Package(package.name, version=lowest_version, operator='<=')
+                        pm = PackageMaskFile(directory)
+                        pm.update(mask_pkgs)
+                        pu = PackageUnmaskFile(directory)
+                        pu.update(unmask_pkgs)
+
+                def autocheck(myroot):
+                    stop_on_warning = self.cfg['profilechecker']['stop_on_warning']
+                    stop_on_error = self.cfg['profilechecker']['stop_on_error']
+
+                    checker = ProfileChecker(workdir + '/root', output = self.log_fd)
+                    checker.parse()
+                    (has_warnings, has_errors) = checker.check_installed_versions()
+
+                    if stop_on_warning and has_warnings:
+                        raise XUtilsError('Profile does not meet expected quality requirements. Check %s' % self.log_file)
+                    if stop_on_error and has_errors:
+                        raise XUtilsError('Some packages will be installed at an unexpected version. Please fix your profile. For more information, check %s' % self.log_file)
+
                 if not target_ebuild.endswith('.ebuild'):
                         target_list = portage.portdb.xmatch('match-all', target_ebuild)
                         try:
@@ -60,18 +98,8 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                         raise XUtilsError(error=str(e))
 
                 if self.cfg['build']['enable_profilechecker']:
-                    stop_on_warning = self.cfg['profilechecker']['stop_on_warning']
-                    stop_on_error = self.cfg['profilechecker']['stop_on_error']
-
-                    checker = ProfileChecker(workdir + '/root', output = self.log_fd)
-                    checker.parse()
-                    (has_warnings, has_errors) = checker.check_installed_versions()
-
-                    if stop_on_warning and has_warnings:
-                        raise XUtilsError('Profile does not meet expected quality requirements. Check %s' % self.log_file)
-                    if stop_on_error and has_errors:
-                        raise XUtilsError('Some packages will be installed at an unexpected version. Please fix your profile. For more information, check %s' % self.log_file)
-
+                    automask(workdir + '/root')
+                    autocheck(workdir + '/root')
                 env = os.environ.copy()
 
 		if "MAKEOPTS" not in env:

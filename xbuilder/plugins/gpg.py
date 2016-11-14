@@ -23,10 +23,7 @@ import os
 
 import gnupg
 
-import portage_util
-
 from portage import config
-from portage_const import INCREMENTALS
 
 from os.path import exists, realpath
 
@@ -50,7 +47,7 @@ class XBuilderGnuPGPlugin(XBuilderPlugin):
                 keysfile = ''
                 workdir = self.cfg['build']['workdir']
                 target_root = os.path.join(workdir, 'root')
-                profile_paths = config(config_root=target_root, target_root=target_root, config_incrementals=INCREMENTALS).profiles
+                profile_paths = config(config_root=target_root, target_root=target_root).profiles
                 paths = [os.path.join(workdir,'root/etc/portage/gpg')]
                 paths.extend(profile_paths)
                 for path in paths[-1::-1]:

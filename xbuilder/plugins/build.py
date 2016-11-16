@@ -94,6 +94,7 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                 try:
                         self.log_fd.flush()
                         target_builder.create('=%s' % eb_cpv, arch, workdir)
+                        target_builder.bootstrap()
                 except XTargetError, e:
                         raise XUtilsError(error=str(e))
 

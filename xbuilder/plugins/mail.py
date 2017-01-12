@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2015 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2017 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -67,7 +67,10 @@ class XBuilderMailPlugin(XBuilderPlugin):
 
                 if build_info['success']:
                         subject = MAIL_MSG_OK
-                        body = MIMEText(MAIL_BODY + "\n\n" + os.getenv('MAIL_BODY', ''))
+                        if build_info.has_key('analyzer'):
+                            body = MIMEText(MAIL_BODY + "\n\n" + build_info['analyzer'] + '\n\n' + os.getenv('MAIL_BODY', ''))
+                        else:
+                            body = MIMEText(MAIL_BODY + "\n\n" + os.getenv('MAIL_BODY', ''))
                 else:
                         subject = MAIL_MSG_NOK
                         body = MIMEText(MAIL_BODY_FAILED % {'uri': self.cfg['mail']['uri'],

@@ -21,9 +21,11 @@
 
 from os import getenv, listdir
 from os.path import abspath, basename
+from portage import config, create_trees
+from portage.exception import InvalidAtom
+from portage.versions import catpkgsplit, pkgsplit
 from re import match, IGNORECASE
 from xbuilder.plugin import XBuilderPlugin
-from xintegtools.xchecker import Ebuild, ProfileParser, validateEbuild, validateProfile, InvalidArgument
 
 OK = 0
 NO_WALL = 1
@@ -33,17 +35,24 @@ SKIPPED = 4
 def validateLogfile(package, config):
     status = OK
     try:
-        myebuild = Ebuild(package)
-    except InvalidArgument:
+        my_root = '/usr/targets/%s/root/' % getenv('CURRENT_TARGET', basename(self.cfg['build']['workdir']))
+        my_trees = create_trees(config_root = my_root, target_root = my_root)
+        portage_db = my_trees[my_root]['vartree'].dbapi
+        [cpv] = portage_db.match(package)
+    except InvalidAtom:
+        status = SKIPPED
+        return status
+    if not cpv:
         status = SKIPPED
         return status
 
-
-    if not match('^wyplay$', myebuild.license, IGNORECASE):
+    [license] = portage_db.aux_get(cpv, ['LICENSE'])
+    if not match('^wyplay$', license, IGNORECASE):
         status = SKIPPED
         return status
 
-    logfile = '%s:%s-%s%s:' % (myebuild.category, myebuild.name, myebuild.version, str() if myebuild.revision == 0 else "-r%d" % myebuild.revision)
+    (category, name, version, revision) = catpkgsplit(cpv)
+    logfile = '%s:%s-%s%s:' % (category, name, version, str() if revision == 'r0' else "-%s" % revision)
     for file in listdir(config['PORT_LOGDIR']):
         if file.startswith(logfile):
             filepath = abspath('%s/%s' % (config['PORT_LOGDIR'], file))
@@ -71,11 +80,14 @@ class XBuilderAnalyzerPlugin(XBuilderPlugin):
         if not build_info['success']:
             return
 
-        target = getenv('CURRENT_TARGET', basename(self.cfg['build']['workdir']))
-        profile = ProfileParser(target)
-        for package in profile.packages.keys():
-            status = validateLogfile(package, profile.profile_config)
-            statusdict[status] += ['%s-%s' % (package, profile.packages[package])]
+        target = '/usr/targets/%s/root' % getenv('CURRENT_TARGET', basename(self.cfg['build']['workdir']))
+        myconfig = config(target_root = target, config_root = target)
+        for item in myconfig.packages:
+            if item.startswith('*'):
+                continue
+            (cp, v, r) = pkgsplit(item[1:])
+            status = validateLogfile(cp, myconfig)
+            statusdict[status] += ['%s-%s%s' % (cp, v, '-%s' % r if r != 'r0' else str())]
 
         build_info['analyzer'] =  analyze
         if len(statusdict[NO_WALL] + statusdict[NO_WALL + NO_WEXTRA]) > 0:

@@ -32,10 +32,10 @@ NO_WALL = 1
 NO_WEXTRA = 2
 SKIPPED = 4
 
-def validateLogfile(package, config):
+def validateLogfile(package, config, target):
     status = OK
     try:
-        my_root = '/usr/targets/%s/root/' % getenv('CURRENT_TARGET', basename(self.cfg['build']['workdir']))
+        my_root = '/usr/targets/%s/root/' % getenv('CURRENT_TARGET', target)
         my_trees = create_trees(config_root = my_root, target_root = my_root)
         portage_db = my_trees[my_root]['vartree'].dbapi
         [cpv] = portage_db.match(package)
@@ -86,7 +86,7 @@ class XBuilderAnalyzerPlugin(XBuilderPlugin):
             if item.startswith('*'):
                 continue
             (cp, v, r) = pkgsplit(item[1:])
-            status = validateLogfile(cp, myconfig)
+            status = validateLogfile(cp, myconfig, basename(self.cfg['build']['workdir']))
             statusdict[status] += ['%s-%s%s' % (cp, v, '-%s' % r if r != 'r0' else str())]
 
         build_info['analyzer'] =  analyze

@@ -42,6 +42,9 @@ def validateLogfile(package, config, target):
     except InvalidAtom:
         status = SKIPPED
         return status
+    except ValueError:
+        status = SKIPPED
+        return status
     if not cpv:
         status = SKIPPED
         return status
@@ -74,7 +77,7 @@ class XBuilderAnalyzerPlugin(XBuilderPlugin):
     def postbuild(self, build_info):
         """ Analyze compilation logs
         """
-        analyze = '## Log file analysis report\n\n'
+        analyze = '#. Log file analysis report\n\n'
         statusdict = {OK: list(), NO_WALL: list(), NO_WEXTRA: list(), NO_WALL + NO_WEXTRA: list(), SKIPPED: list()}
 
         if not build_info['success']:

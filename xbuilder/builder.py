@@ -274,6 +274,8 @@ class XBuilder(object):
                     myroot = '%s/%s' % (workdir, 'root')
                     profile_directory = config(config_root=myroot, target_root=myroot, config_incrementals=INCREMENTALS).profiles[-1]
                     base = realpath('%s/%s/%s' % (myroot, '/etc/portage', pn))
+                    if not os.path.isdir(base):
+			base = realpath('%s/%s' % (myroot, 'etc/portage/profiles'))
                     self.build_info['profile'] = profile_directory[len(base) + 1:]
 
         def postbuild(self):

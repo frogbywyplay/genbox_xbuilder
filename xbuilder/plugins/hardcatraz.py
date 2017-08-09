@@ -32,6 +32,8 @@ from xbuilder.plugin import XBuilderPlugin
 class XBuilderHardcatrazPlugin(XBuilderPlugin):
 
         def postbuild(self, build_info):
+                if build_info['success'] != True:
+                    return
                 self.info('Running hardcatraz postbuild script')
                 rootdir = self.cfg['build']['workdir'] + '/root'
                 redistdir = rootdir + '/redist'

@@ -1,0 +1,111 @@
+9999 -- 06/12/17
+
+- First release for binpkg xbuilder plugin (#110685).
+    * Uses packages.wyplay.int server and integration user.
+    * Use a list (defined in /etc/xbuilder.conf configuration file) to know
+     which binary package to check.
+    * Generate binary package if it does not exists.
+    * Upload binary package on server after its creation.
+    * If there is a problem, just log a warning and skip the problematic package
+     => does not stop on problems (we do not want a build failure just because
+     we failed on an optional binary package).
+
+1.2.18 -- 09/08/17
+
+- Update hardcatraz plugin (#104432):
+    * Hardcatraz plugin was always run, even after a build failure. It's a
+     waste of time so run hardcatraz plugin only on successful build.
+
+1.2.17 -- 19/04/17
+
+- Add support of profiles directory name 'profiles' instead of
+
+1.2.16 -- 12/01/17
+
+- Add analyzer plugin (#91003):
+    * This plugin will, at the end of the build, parse the log of Wyplay
+     components (based on LICENSE variable value in ebuild) and check if
+     '-Wall' and '-Wextra' compiler flags are enabled. Then it will add its
+     report to the notification mail.
+
+1.2.15 -- 16/09/16
+    
+- Look up the GPG keyring file in all directory paths which constitute current profile.
+    * Modification de la recherche des trousseau de clé GPG pour l'encryption de prebuilt.  Cette modification permet de parcourir l'arborescence d'un profil donnée à la recherche du 1er fichier trousseau de clé GPG rencontré.
+     Cela permet d'utiliser un seul fichier GPG pour les 4 profils NCP qui utilise chacun une copie du trousseau de clé.
+     Cette mutualisation permet de prevenir d'evnetulle oublie d'ajout de clé dansle trousseau de clé GPG.
+
+1.2.14 -- 24/08/16
+
+    
+- jenkinsnotifier.py modes for either simple or parameter jobs
+    * added a function to get detailed job info
+    * added a mode where: if the job has parameters, push three parameters: target name, arch, and version. if not, call simple job as before.
+    * fixed normal call by adding /build to the computed uri.
+
+1.2.13 -- 10/08/16
+
+- Add a flat_profile option in 'release' section (#83851).
+    * This option aims to keep a compatibility with older xbuilder versions.
+     Indeed the change related to 'profile' instead of 'arch' has some
+     impacts on projects that we do not want to migrate. So add this option
+     to keep a compatibility and avoid some extra changes in projects.
+- Fix jenkinsnotifier plugin registration (#78456)
+    * There was a mistake when registering jenkinsnotifier plugin (wrong
+     class name), so fix it so that anybody is able to use jenkinsnotifier
+    plugin.
+
+1.2.12 -- 11/07/16
+
+- Introduce 'profile' notion to replace 'arch' under given circumstances.
+    * 'arch' is supposed to be related to a board. Nonetheless, these last
+     years 'arch' notion has been extended to cover some new requirements in
+     the project like having a default build and a hardened one. It leads to
+     some arch looking more to a path rather than to an arch.
+     The purpose of this development is to keep 'arch' definition as it was
+     years ago and introduce the 'profile' notion to cover our new
+     requirements.
+- Use xz compression instead of gzip (#82935).
+    * Currently rootfs and debuginfo are compressed using gzip algorithm.
+     From this point you can choose which algorithm to use to compress
+     rootfs and debuginfo. By default it will use "xz" algorithm.
+
+1.2.11 -- 21/04/16
+
+- Add "tar_extra_opts" option for prebuilt archive.
+    * Due to some security requirements, we may want to add some extra
+     options to tar command when creating the prebuilt tarball. It is the
+     reason why "tar_extra_opts" option is introduced.
+
+1.2.1O -- 22/03/16
+
+- added 'from =' config to the mail section of xbuilder.conf
+
+1.2.9 -- 01/03/16
+
+- Fix jenkinsnotifier plugin with python2.5 (#78456).
+    * jenkins notifier xbuilder plugin is based on requests python library.
+     But in python2.5, requests library does not support json() method on
+     Response class. So this commit implements this missing json with using
+     simplejson python library.
+- Implement jenkins notifier plugin.
+    * Add a xbuilder plugin aims to notify a given Jenkins job about
+     build successful finish.
+
+1.2.8 -- 29/02/16
+
+- Update GPG plugin to assign a file pubring.gpg per profile
+
+1.2.7 -- 15/07/15
+
+- xbuilder polka
+    * mail plugin: support optional environment variables: MAIL_TO and MAIL_BODY (currently used in Polka but patched on builder every time xbuilder is emerged).
+    * hardcatraz plugin: ensure environments variables are kept in subprocess
+
+1.2.6 -- 17/06/15
+
+- start a hardcatraz plugin. to be tested
+
+1.2.5 -- 28/07/14
+
+- Initial import for xbuilder 1.2.5

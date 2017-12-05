@@ -93,6 +93,9 @@ Configuration file relies on INI format and has the following available options:
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``features``              | *None*                                  | Space separated list of features to enable/disable in portage. See FEATURES in|
 |                    |                           |                                         | make.conf man page for more info.                                             |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``binpkgs``               | *None*                                  | Space separated list of package to binarize. It is disabled if PORTAGE_BINHOST|
+|                    |                           |                                         | is not set.                                                                   |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``release``        | ``archive_dir``           | ``/opt/xbuilder``                       | Place/directory to release target prebuilt tarball                            |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+

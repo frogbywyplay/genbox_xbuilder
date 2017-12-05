@@ -97,7 +97,7 @@ class XBuilder(object):
                             'mail' : {},
                             'notifier': {},
                             'release' : {},
-			    'gpg' : {},
+                            'gpg' : {},
                            }
                 self.cfg['target']['max_beta'] = int(cfg.get('target', 'max_beta', XBUILDER_MAX_BETA_TARGETS))
                 self.cfg['target']['commit'] = cfg.get('target', 'commit', XBUILDER_TARGET_COMMIT)
@@ -106,6 +106,7 @@ class XBuilder(object):
                 self.cfg['build']['workdir'] = cfg.get('build', 'workdir', XBUILDER_WORKDIR)
                 self.cfg['build']['plugins'] = cfg.get('build', 'plugins', '').split()
                 self.cfg['build']['features'] = cfg.get('build', 'features', XBUILDER_FEATURES)
+                self.cfg['build']['binpkgs'] = cfg.get('build', 'binpkgs', str()).split()
 
                 self.cfg['release']['archive_dir'] = cfg.get('release', 'archive_dir', XBUILDER_ARCHIVE_DIR)
                 self.cfg['release']['compression'] = cfg.get('release', 'compression', XBUILDER_COMPRESSION)
@@ -124,9 +125,9 @@ class XBuilder(object):
                 self.cfg['mail']['log_size'] = int(cfg.get('mail', 'log_size', XBUILDER_MAIL_LOG_SIZE))
                 self.cfg['mail']['uri'] = cfg.get('mail', 'uri', XBUILDER_MAIL_URI)
                 self.cfg['notifier']['uri'] = cfg.get('notifier', 'uri', XBUILDER_NOTIFIER_URI)
-		self.cfg['gpg']['logfile'] = cfg.get('gpg', 'logfile', os.path.join(self.cfg['build']['workdir'], XBUILDER_GPG_LOGFILE))
-		self.cfg['gpg']['loglevel'] = int(cfg.get('gpg', 'loglevel', XBUILDER_GPG_LOGLEVEL))
-		del cfg
+                self.cfg['gpg']['logfile'] = cfg.get('gpg', 'logfile', os.path.join(self.cfg['build']['workdir'], XBUILDER_GPG_LOGFILE))
+                self.cfg['gpg']['loglevel'] = int(cfg.get('gpg', 'loglevel', XBUILDER_GPG_LOGLEVEL))
+                del cfg
 
         def info(self, msg, eol=True):
                 info(msg, eol)

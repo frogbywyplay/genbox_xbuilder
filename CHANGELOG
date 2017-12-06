@@ -1,4 +1,4 @@
-9999 -- 06/12/17
+1.2.19 -- 06/12/17
 
 - First release for binpkg xbuilder plugin (#110685).
     * Uses packages.wyplay.int server and integration user.

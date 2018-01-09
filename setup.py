@@ -19,53 +19,56 @@
 #
 #
 
-from distutils.core import setup, Command
-
-from unittest import TextTestRunner, TestLoader
-from glob import glob
-from os.path import splitext, basename, join as pjoin, walk
+import contextlib
+import glob
 import os
 import sys
+from unittest import TextTestRunner, TestLoader
 
-packages = [ 'xbuilder', 'xbuilder.plugins' ]
+from distutils.core import setup, Command
 
-class TestCoverage(object):
-        def __init__(self):
-                try:
-                        import coverage
-                        self.cov = coverage
-                except:
-                        print "Can't find the coverage module"
-                        self.cov = None
-                        return
+try:
+    import coverage
+except ImportError:
+
+    class Coverage(object):
+        def erase(self):
+            pass
+
         def start(self):
-                if not self.cov:
-                        return
-                self.cov.erase()
-                self.cov.start()
+            pass
+
         def stop(self):
-                if not self.cov:
-                        return
-                self.cov.stop()
+            pass
+
         def report(self):
-                if not self.cov:
-                        return
-                print "\nCoverage report:"
-                report_list = []
-                for package in packages:
-                        for root, dir, files in os.walk(package):
-                                for file in files:
-                                        if file.endswith('.py'):
-                                                report_list.append("%s/%s" % (root, file))
-                self.cov.report(report_list)
+            pass
+
+    coverage = Coverage()
+
+PACKAGES = ['xbuilder', 'xbuilder.plugins']
+
+
+@contextlib.contextmanager
+def testcoverage():
+    coverage.erase()
+    coverage.start()
+    yield
+    coverage.stop()
+    print "\nCoverage report:"
+    coverage.report(list(py for package in PACKAGES for py in glob.glob(os.path.join(package, '*.py'))))
+
+
+@contextlib.contextmanager
+def nocov():
+    yield
 
 
 class TestCommand(Command):
-    user_options = [ ( 'coverage', 'c', 'Enable coverage output' ) ]
-    boolean_options = [ 'coverage' ]
+    user_options = [('coverage', 'c', 'Enable coverage output')]
+    boolean_options = ['coverage']
 
     def initialize_options(self):
-        self._dir = os.getcwd()
         self.coverage = False
 
     def finalize_options(self):
@@ -76,50 +79,36 @@ class TestCommand(Command):
         Finds all the tests modules in tests/, and runs them.
         '''
         if self.coverage:
-                cov = TestCoverage()
-                cov.start()
+            cov = testcoverage
+        else:
+            cov = nocov
 
-        testfiles = [ ]
-        for t in glob(pjoin(self._dir, 'tests', '*.py')):
-            if not t.endswith('__init__.py'):
-                testfiles.append('.'.join(
-                    ['tests', splitext(basename(t))[0]])
-                )
+        with cov():
+            tests = TestLoader().loadTestsFromNames(
+                list(path.replace('/', '.').replace('.py', '') for path in glob.glob('tests/[a-z]*.py'))
+            )
+            runner = TextTestRunner(verbosity=1)
+            run = runner.run(tests)
 
-        tests = TestLoader().loadTestsFromNames(testfiles)
-        t = TextTestRunner(verbosity = 1)
-        ts = t.run(tests)
+        if not run.wasSuccessful():
+            sys.exit(1)
 
-        if self.coverage:
-                cov.stop()
-                cov.report()
-
-        if not ts.wasSuccessful():
-		sys.exit(1)
-
-def find_packages(dir):
-    packages = []
-    for root, dir, files in os.walk(dir):
-        if '__init__.py' in files:
-            packages.append(root.replace('/', '.'))
-    return packages
 
 setup(
-    name = "xbuilder",
-    version = "2.1.7",
-    description = "Xbuilder tool for genbox",
-    author = "Wyplay",
-    author_email = "noreply@wyplay.com",
-    url = "http://www.wyplay.com",
-    install_requires = ['paramiko', 'portage', 'requests'],
-    packages = packages,
-    scripts = [
-               "scripts/xbuilder",
-              ],
-    data_files = [
-                  ('/etc', [ 'config/xbuilder.conf' ])
-                 ],
-    long_description = """xbuilder tools for genbox""",
-    cmdclass = { 'test' : TestCommand }
+    name="xbuilder",
+    version="2.1.7",
+    description="Xbuilder tool for genbox",
+    author="Wyplay",
+    author_email="noreply@wyplay.com",
+    url="http://www.wyplay.com",
+    install_requires=['paramiko', 'portage', 'requests'],
+    packages=PACKAGES,
+    scripts=[
+        "scripts/xbuilder",
+    ],
+    data_files=[('/etc', ['config/xbuilder.conf'])],
+    long_description="""xbuilder tools for genbox""",
+    cmdclass={
+        'test': TestCommand
+    }
 )
-

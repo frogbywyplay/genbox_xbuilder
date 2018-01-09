@@ -1,3 +1,8 @@
+1.2.20 -- 07/12/17
+- Enable parallel xz compression when using xz method
+  * DEPENDS on pixz unconditionnaly
+  * Relies on default compressors for all other methods
+
 1.2.19 -- 06/12/17
 
 - First release for binpkg xbuilder plugin (#110685).

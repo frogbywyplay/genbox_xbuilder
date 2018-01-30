@@ -67,7 +67,7 @@ class XBuilderMailPlugin(XBuilderPlugin):
 
         if build_info['success']:
             subject = MAIL_MSG_OK
-            if build_info.has_key('analyzer'):
+            if 'analyzer' in build_info:
                 body = MIMEText(MAIL_BODY + '\n\n' + build_info['analyzer'] + '\n\n' + os.getenv('MAIL_BODY', ''))
             else:
                 body = MIMEText(MAIL_BODY + '\n\n' + os.getenv('MAIL_BODY', ''))
@@ -88,7 +88,7 @@ class XBuilderMailPlugin(XBuilderPlugin):
                 try:
                     fd.seek(-self.cfg['mail']['log_size'], os.SEEK_END)
                     fd.readline()
-                except IOError, e:
+                except IOError:
                     # The file might be less than MAIL_LOG_SIZE
                     fd.seek(0, os.SEEK_SET)
                 self.__attach_text(fd, msg)

@@ -19,4 +19,4 @@
 #
 #
 
-from builder import XBuilder
+from builder import XBuilder  # noqa

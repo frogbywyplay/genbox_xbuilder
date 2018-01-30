@@ -25,14 +25,7 @@ import gnupg
 
 from portage import config
 
-from os.path import exists, realpath
-
-from subprocess import Popen
-
 from xutils import XUtilsError
-from xutils.ebuild import ebuild_factory
-
-from xtarget import XTargetError
 
 from xbuilder.plugin import XBuilderPlugin
 
@@ -63,7 +56,9 @@ class XBuilderGnuPGPlugin(XBuilderPlugin):
         self.gpg_allkeyids = [i['keyid'] for i in self.gpg.list_keys()]
         if not self.gpg_allkeyids:
             self.clean_up()
-            raise XUtilsError('No gpg keys, externalkeyring=%r, see GnuPG log %r.' % (keys, self.cfg['gpg']['logfile']))
+            raise XUtilsError(
+                'No gpg keys, externalkeyring=%r, see GnuPG log %r.' % (keysfile, self.cfg['gpg']['logfile'])
+            )
         self.process_file('debuginfo', build_info)
         self.process_file('root', build_info)
         self.clean_up()

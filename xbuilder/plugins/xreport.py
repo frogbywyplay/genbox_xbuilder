@@ -31,38 +31,9 @@ from xbuilder.consts import XBUILDER_REPORT_FILE
 
 from xintegtools.xreport import XReport, XReportXMLOutput
 
-from xutils.xerror import XUtilsError
+from xutils import XUtilsError
 
-
-@contextlib.contextmanager
-def env_override(**kwargs):
-    def saveenv():
-        for k in kwargs:
-            try:
-                yield k, os.environ[k]
-            except KeyError:
-                pass
-
-    savedenv = dict(saveenv())
-    os.environ.update(kwargs)
-    yield
-    os.environ.update(savedenv)
-
-
-def reload_portage_and_gentoolkit():
-    import portage
-    reload(portage)
-    import gentoolkit
-    reload(gentoolkit)
-    from threading import Lock
-    settingslock = Lock()  # pylint: disable=unused-variable
-    gentoolkit.settings = portage.config(clone=portage.settings)
-    gentoolkit.porttree = portage.db[portage.root]['porttree']
-    gentoolkit.vartree = portage.db[portage.root]['vartree']
-    gentoolkit.virtuals = portage.db[portage.root]['virtuals']
-    import gentoolkit.package
-    reload(gentoolkit.package)
-
+import bz2
 
 
 class XBuilderXreportPlugin(XBuilderPlugin):
@@ -73,14 +44,14 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         xr.vdb_create()
         self.report_file = '/'.join([workdir, XBUILDER_REPORT_FILE])
         fd = bz2.BZ2File(self.report_file, 'w')
-        out = XReportXMLOutput(errors_only=False).process(xr, fd)
+        XReportXMLOutput(errors_only=False).process(xr, fd)
         fd.close()
 
         hostxr = XReport()
         hostxr.vdb_create()
         self.report_host_file = '/'.join([workdir, 'host-' + XBUILDER_REPORT_FILE])
         hostfd = bz2.BZ2File(self.report_host_file, 'w')
-        out = XReportXMLOutput(errors_only=False).process(hostxr, hostfd)
+        XReportXMLOutput(errors_only=False).process(hostxr, hostfd)
         hostfd.close()
         return self.report_file, self.report_host_file
 
@@ -102,12 +73,12 @@ class XBuilderXreportPlugin(XBuilderPlugin):
                     stderr=self.log_fd,
                     shell=False,
                     cwd=None).wait()
-        ret2 = Popen(['cp', self.report_host_file, '/'.join([dest_dir, 'host-' + XBUILDER_REPORT_FILE])],
-                     bufsize=-1,
-                     stdout=self.log_fd,
-                     stderr=self.log_fd,
-                     shell=False,
-                     cwd=None).wait()
+        Popen(['cp', self.report_host_file, '/'.join([dest_dir, 'host-' + XBUILDER_REPORT_FILE])],
+              bufsize=-1,
+              stdout=self.log_fd,
+              stderr=self.log_fd,
+              shell=False,
+              cwd=None).wait()
         if ret != 0:
             raise XUtilsError('Failed to release the report file')
 

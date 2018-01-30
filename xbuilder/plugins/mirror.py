@@ -20,7 +20,7 @@
 #
 from __future__ import print_function
 
-from os import stat
+from os import stat, listdir
 from os.path import exists, realpath
 from functools import partial
 from paramiko import AutoAddPolicy, SFTPClient, SSHClient
@@ -90,10 +90,11 @@ class XBuilderMirrorPlugin(XBuilderPlugin):
                 src_dir = self.cfg['build']['workdir']
         if not src_dir:
             src_dir = self.cfg['release']['archive_dir']
-        files = list()
-        files += ['%s-%s_root.tar.gz' % (build_info['pkg_name'], build_info['version'])]
-        files += ['%s-%s_debuginfo.tar.gz' % (build_info['pkg_name'], build_info['version'])]
-        files += [rootfs_file + '.gpg']
+        files = [
+            '%s-%s_root.tar.gz' % (build_info['pkg_name'], build_info['version']),
+            '%s-%s_debuginfo.tar.gz' % (build_info['pkg_name'], build_info['version']),
+            '%s-%s_root.tar.gz.gpg' % (build_info['pkg_name'], build_info['version']),
+        ]
         try:
             sftp = SFTPClient.from_transport(ssh.get_transport())
             sftp.chdir(dest_dir)

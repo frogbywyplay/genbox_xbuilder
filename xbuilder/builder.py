@@ -20,23 +20,39 @@
 #
 
 import os
-import portage
 
-from os.path import realpath, dirname, isfile, exists, expanduser
+from os.path import isfile, exists, expanduser
 from subprocess import Popen
 
-from portage import config
-from portage_const import INCREMENTALS
-
-from xtarget import XTargetBuilder, XTargetError, XTargetReleaseParser
+from xtarget import XTargetBuilder, XTargetReleaseParser
 
 from xintegtools.xbump import InvalidArgument, TargetEbuildUpdater
 from xutils import XUtilsError, XUtilsConfig, info, vinfo, error
-from xutils.ebuild import ebuild_factory
 
 from xportage.xportage import XPortage
 
-from consts import *
+from consts import (
+    XBUILDER_ARCHIVE_DIR,
+    XBUILDER_CLEAN_WORKDIR,
+    XBUILDER_COMPRESSION,
+    XBUILDER_DEFTYPE,
+    XBUILDER_FEATURES,
+    XBUILDER_GPG_LOGFILE,
+    XBUILDER_GPG_LOGLEVEL,
+    XBUILDER_LOGFILE,
+    XBUILDER_MAIL_FROM,
+    XBUILDER_MAIL_LOG_SIZE,
+    XBUILDER_MAIL_SMTP,
+    XBUILDER_MAIL_TO,
+    XBUILDER_MAIL_URI,
+    XBUILDER_MAX_BETA_TARGETS,
+    XBUILDER_NOTIFIER_URI,
+    XBUILDER_SYS_CFG,
+    XBUILDER_TARGET_COMMIT,
+    XBUILDER_TYPES,
+    XBUILDER_USER_CFG,
+    XBUILDER_WORKDIR,
+)
 
 
 class XBuilder(object):
@@ -58,7 +74,7 @@ class XBuilder(object):
 
         if self.cfg['build']['clean_workdir'] and exists(workdir):
             info('Cleaning workdir')
-            ret = Popen(['rm', '-rf', workdir], bufsize=-1, stdout=None, stderr=None, shell=False, cwd=None).wait()
+            Popen(['rm', '-rf', workdir], bufsize=-1, stdout=None, stderr=None, shell=False, cwd=None).wait()
 
         if not exists(workdir):
             os.makedirs(workdir)
@@ -220,13 +236,13 @@ class XBuilder(object):
             raise XUtilsError('Can\'t find release file')
 
         for k in ['name', 'version', 'arch']:
-            if not release.has_key(k):
+            if k not in release:
                 raise XUtilsError('Missing key in release file (%s)' % k)
 
         cat, pn = release['name'].split('/')
         self.build_info['pkg_name'] = pn
         self.build_info['category'] = cat
-        if not self.build_info.has_key('version'):
+        if 'version' not in self.build_info:
             self.build_info['version'] = release['version']
         self.build_info['arch'] = release['arch']
 

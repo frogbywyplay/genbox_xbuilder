@@ -30,11 +30,11 @@ class XBuilderNotifierPlugin(XBuilderPlugin):
         output.info('Notifier: send %s information' % step)
         params['step'] = step
         try:
-            ret = urlopen(self.cfg['notifier']['uri'], urlencode(params))
-        except URLError, e:
-            return output.error('URLError: %s' % e)
+            urlopen(self.cfg['notifier']['uri'], urlencode(params))
         except HTTPError, e:
             return output.error('HTTPError: %s' % e)
+        except URLError, e:
+            return output.error('URLError: %s' % e)
 
     def prebuild(self, target_ebuild, arch=None):
         # 2013-10-09: no need

@@ -20,14 +20,11 @@
 #
 
 import os
-from os.path import exists, realpath
+from os.path import exists
 
 from subprocess import Popen
 
 from xutils import XUtilsError
-from xutils.ebuild import ebuild_factory
-
-from xtarget import XTargetError
 
 from xbuilder.plugin import XBuilderPlugin
 

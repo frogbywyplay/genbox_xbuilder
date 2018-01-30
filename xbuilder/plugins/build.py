@@ -20,11 +20,10 @@
 #
 
 import os
-import readline
 import portage
 from portage import config
 from portage.versions import vercmp
-from os.path import exists, realpath
+from os.path import exists
 
 from subprocess import Popen, PIPE
 

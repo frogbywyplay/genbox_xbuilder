@@ -116,8 +116,9 @@ class FmtCommand(Command):
                     yield os.path.join(root, fname)
 
     def run(self):
+        print('* running unify')
         subprocess.check_call(['unify', '-i', '-r', '.'])
-        print('running yapf')
+        print('* running yapf')
         subprocess.check_call(['yapf', '-i'] + list(self._find_py()))
 
 

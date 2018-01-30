@@ -22,7 +22,6 @@
 import os
 from os.path import exists
 
-from shutil import copy
 from subprocess import Popen
 from xutils import XUtilsError
 
@@ -34,7 +33,6 @@ class XBuilderHardcatrazPlugin(XBuilderPlugin):
     def postbuild(self, build_info):
         self.info('Running hardcatraz postbuild script')
         rootdir = self.cfg['build']['workdir'] + '/root'
-        redistdir = rootdir + '/redist'
         hardcatraz_file = rootdir + '/etc/portage/hardcatraz-config/hardcatraz.json'
         check_rootfs = '/opt/alcatraz-tools/hardcatraz_check_rootfs.py'
 

@@ -78,7 +78,7 @@ class Jenkins(object):
             output.error('jenkinsnotifier: Unable to get uri %s.' % uri)
             output.error('jenkinsnotifier: Error %d: %s.' % (request.status_code, request.reason))
             return self.jobs
-        return loads(request.text)
+        return request.json()
 
     def build(self, job, uri=str(), jobparams=dict()):
         if not uri:

@@ -18,50 +18,49 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #
+from __future__ import print_function
 
-import contextlib
+from setuptools import setup, Command
+
 import glob
 import os
+import subprocess
 import sys
 from unittest import TextTestRunner, TestLoader
 
-from distutils.core import setup, Command
 
-try:
-    import coverage
-except ImportError:
+class TestCoverage(object):
+    def __init__(self):
+        try:
+            import coverage
+            self.cov = coverage
+        except:
+            print("Can't find the coverage module")
+            self.cov = None
+            return
 
-    class Coverage(object):
-        def erase(self):
-            pass
+    def start(self):
+        if not self.cov:
+            return
+        self.cov.erase()
+        self.cov.start()
 
-        def start(self):
-            pass
+    def stop(self):
+        if not self.cov:
+            return
+        self.cov.stop()
 
-        def stop(self):
-            pass
-
-        def report(self):
-            pass
-
-    coverage = Coverage()
-
-PACKAGES = ['xbuilder', 'xbuilder.plugins']
-
-
-@contextlib.contextmanager
-def testcoverage():
-    coverage.erase()
-    coverage.start()
-    yield
-    coverage.stop()
-    print "\nCoverage report:"
-    coverage.report(list(py for package in PACKAGES for py in glob.glob(os.path.join(package, '*.py'))))
-
-
-@contextlib.contextmanager
-def nocov():
-    yield
+    def report(self):
+        if not self.cov:
+            return
+        print('\nCoverage report:')
+        report_list = []
+        for package in self.distribution.packages:
+            for root, dir, files in os.walk(package):
+                for file in files:
+                    if file.endswith('.py'):
+                        report_list.append('%s/%s' % (root, file))
+        self.cov.report(report_list)
 
 
 class TestCommand(Command):
@@ -79,36 +78,66 @@ class TestCommand(Command):
         Finds all the tests modules in tests/, and runs them.
         '''
         if self.coverage:
-            cov = testcoverage
-        else:
-            cov = nocov
+            cov = TestCoverage()
+            cov.start()
 
-        with cov():
-            tests = TestLoader().loadTestsFromNames(
-                list(path.replace('/', '.').replace('.py', '') for path in glob.glob('tests/[a-z]*.py'))
-            )
-            runner = TextTestRunner(verbosity=1)
-            run = runner.run(tests)
+        testfiles = []
+        for t in glob.glob(os.path.join(self._dir, 'tests', '*.py')):
+            if not t.endswith('__init__.py'):
+                testfiles.append('.'.join(['tests', os.path.splitext(os.path.basename(t))[0]]))
 
-        if not run.wasSuccessful():
+        tests = TestLoader().loadTestsFromNames(testfiles)
+        t = TextTestRunner(verbosity=1)
+        ts = t.run(tests)
+
+        if self.coverage:
+            cov.stop()
+            cov.report()
+
+        if not ts.wasSuccessful():
             sys.exit(1)
 
 
+class FmtCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    @staticmethod
+    def _find_py():
+        """ find -name \*.py """
+        for root, _, files in os.walk('.'):
+            for fname in files:
+                if os.path.splitext(fname)[1] == '.py':
+                    yield os.path.join(root, fname)
+
+    def run(self):
+        subprocess.check_call(['unify', '-i', '-r', '.'])
+        print('running yapf')
+        subprocess.check_call(['yapf', '-i'] + list(self._find_py()))
+
+
 setup(
-    name="xbuilder",
-    version="2.1.7",
-    description="Xbuilder tool for genbox",
-    author="Wyplay",
-    author_email="noreply@wyplay.com",
-    url="http://www.wyplay.com",
+    name='xbuilder',
+    version='2.1.7',
+    description='Xbuilder tool for genbox',
+    author='Wyplay',
+    author_email='noreply@wyplay.com',
+    url='http://www.wyplay.com',
     install_requires=['paramiko', 'portage', 'requests'],
-    packages=PACKAGES,
+    packages=['xbuilder', 'xbuilder.plugins'],
     scripts=[
-        "scripts/xbuilder",
+        'scripts/xbuilder',
     ],
     data_files=[('/etc', ['config/xbuilder.conf'])],
     long_description="""xbuilder tools for genbox""",
     cmdclass={
-        'test': TestCommand
-    }
+        'test': TestCommand,
+        'fmt': FmtCommand,
+    },
+    tests_require=['coverage']
 )

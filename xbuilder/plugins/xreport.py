@@ -64,40 +64,35 @@ def reload_portage_and_gentoolkit():
     reload(gentoolkit.package)
 
 
+
 class XBuilderXreportPlugin(XBuilderPlugin):
     def postbuild(self, build_info):
         self.info('Generating report with xreport')
         workdir = self.cfg['build']['workdir']
-        rootdir = os.path.join(workdir, 'root/')
-        xr = XReport(root=rootdir, portage_configroot=rootdir)
+        xr = XReport(root=workdir + '/root', portage_configroot=workdir + '/root')
         xr.vdb_create()
-        self.report_file = os.path.join(workdir, XBUILDER_REPORT_FILE)
-        with contextlib.closing(bz2.BZ2File(self.report_file, 'w')) as fd:
-            with env_override(ROOT=rootdir, PORTAGE_CONFIGROOT=rootdir):
-                reload_portage_and_gentoolkit()
-                XReportXMLOutput(errors_only=False).process(xr, fd, True)
+        self.report_file = '/'.join([workdir, XBUILDER_REPORT_FILE])
+        fd = bz2.BZ2File(self.report_file, 'w')
+        out = XReportXMLOutput(errors_only=False).process(xr, fd)
+        fd.close()
 
-        reload_portage_and_gentoolkit()
-        self.info('Generating host-report with xreport')
         hostxr = XReport()
         hostxr.vdb_create()
-        self.report_host_file = os.path.join(workdir, 'host-' + XBUILDER_REPORT_FILE)
-        with contextlib.closing(bz2.BZ2File(self.report_host_file, 'w')) as hostfd:
-            XReportXMLOutput(errors_only=False).process(hostxr, hostfd)
+        self.report_host_file = '/'.join([workdir, 'host-' + XBUILDER_REPORT_FILE])
+        hostfd = bz2.BZ2File(self.report_host_file, 'w')
+        out = XReportXMLOutput(errors_only=False).process(hostxr, hostfd)
+        hostfd.close()
         return self.report_file, self.report_host_file
 
     def release(self, build_info):
         archive = self.cfg['release']['archive_dir']
 
         dest_dir = '/'.join([
-            archive, build_info['category'], build_info['pkg_name'], build_info['version'], build_info['profile']
+            archive, build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch']
         ])
 
-        try:
+        if not exists(dest_dir):
             os.makedirs(dest_dir)
-        except OSError:
-            if not os.path.exists(dest_dir):
-                raise
 
         self.info('Releasing report file')
         self.log_fd.flush()
@@ -107,12 +102,12 @@ class XBuilderXreportPlugin(XBuilderPlugin):
                     stderr=self.log_fd,
                     shell=False,
                     cwd=None).wait()
-        Popen(['cp', self.report_host_file, '/'.join([dest_dir, 'host-' + XBUILDER_REPORT_FILE])],
-              bufsize=-1,
-              stdout=self.log_fd,
-              stderr=self.log_fd,
-              shell=False,
-              cwd=None).wait()
+        ret2 = Popen(['cp', self.report_host_file, '/'.join([dest_dir, 'host-' + XBUILDER_REPORT_FILE])],
+                     bufsize=-1,
+                     stdout=self.log_fd,
+                     stderr=self.log_fd,
+                     shell=False,
+                     cwd=None).wait()
         if ret != 0:
             raise XUtilsError('Failed to release the report file')
 

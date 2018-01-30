@@ -2,17 +2,17 @@
 #
 # Copyright (C) 2006-2017 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
-# 
+#
 # xbuilder is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # xbuilder is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; see file COPYING.
 # If not, see <http://www.gnu.org/licenses/>.
@@ -32,11 +32,12 @@ NO_WALL = 1
 NO_WEXTRA = 2
 SKIPPED = 4
 
+
 def validateLogfile(package, config, target):
     status = OK
     try:
         my_root = '/usr/targets/%s/root/' % getenv('CURRENT_TARGET', target)
-        my_trees = create_trees(config_root = my_root, target_root = my_root)
+        my_trees = create_trees(config_root=my_root, target_root=my_root)
         portage_db = my_trees[my_root]['vartree'].dbapi
         [cpv] = portage_db.match(package)
     except InvalidAtom:
@@ -55,7 +56,7 @@ def validateLogfile(package, config, target):
         return status
 
     (category, name, version, revision) = catpkgsplit(cpv)
-    logfile = '%s:%s-%s%s:' % (category, name, version, str() if revision == 'r0' else "-%s" % revision)
+    logfile = '%s:%s-%s%s:' % (category, name, version, str() if revision == 'r0' else '-%s' % revision)
     for file in listdir(config['PORT_LOGDIR']):
         if file.startswith(logfile):
             filepath = abspath('%s/%s' % (config['PORT_LOGDIR'], file))
@@ -72,8 +73,8 @@ def validateLogfile(package, config, target):
             break
     return status
 
-class XBuilderAnalyzerPlugin(XBuilderPlugin):
 
+class XBuilderAnalyzerPlugin(XBuilderPlugin):
     def postbuild(self, build_info):
         """ Analyze compilation logs
         """
@@ -84,7 +85,7 @@ class XBuilderAnalyzerPlugin(XBuilderPlugin):
             return
 
         target = '/usr/targets/%s/root' % getenv('CURRENT_TARGET', basename(self.cfg['build']['workdir']))
-        myconfig = config(target_root = target, config_root = target)
+        myconfig = config(target_root=target, config_root=target)
         for item in myconfig.packages:
             if item.startswith('*'):
                 continue
@@ -92,18 +93,18 @@ class XBuilderAnalyzerPlugin(XBuilderPlugin):
             status = validateLogfile(cp, myconfig, basename(self.cfg['build']['workdir']))
             statusdict[status] += ['%s-%s%s' % (cp, v, '-%s' % r if r != 'r0' else str())]
 
-        build_info['analyzer'] =  analyze
+        build_info['analyzer'] = analyze
         if len(statusdict[NO_WALL] + statusdict[NO_WALL + NO_WEXTRA]) > 0:
-            build_info['analyzer'] +=  'Packages which do not have \'-Wall\' compiler flag enabled:\n\n'
+            build_info['analyzer'] += 'Packages which do not have \'-Wall\' compiler flag enabled:\n\n'
             for s in statusdict[NO_WALL] + statusdict[NO_WALL + NO_WEXTRA]:
                 build_info['analyzer'] += '\t* %s\n' % s
         if len(statusdict[NO_WEXTRA] + statusdict[NO_WALL + NO_WEXTRA]) > 0:
-            build_info['analyzer'] +=  'Packages which do not have \'-Wextra\' compiler flag enabled:\n\n'
+            build_info['analyzer'] += 'Packages which do not have \'-Wextra\' compiler flag enabled:\n\n'
             for s in statusdict[NO_WEXTRA] + statusdict[NO_WALL + NO_WEXTRA]:
                 build_info['analyzer'] += '\t* %s\n' % s
         if build_info['analyzer'] == analyze:
             build_info['analyzer'] += 'Congratulations: everything is perfect!'
 
+
 def register(builder):
     builder.add_plugin(XBuilderAnalyzerPlugin)
-

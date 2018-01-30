@@ -5,3 +5,4 @@
 tests/xb_workdir
 tests/xb_tmp
 .vscode
+xbuilder.egg-info

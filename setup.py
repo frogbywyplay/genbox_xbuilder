@@ -50,7 +50,7 @@ class TestCoverage(object):
             return
         self.cov.stop()
 
-    def report(self):
+    def report(self, packages):
         if not self.cov:
             return
         print('\nCoverage report:')
@@ -92,7 +92,7 @@ class TestCommand(Command):
 
         if self.coverage:
             cov.stop()
-            cov.report()
+            cov.report(self.distribution.packages)
 
         if not ts.wasSuccessful():
             sys.exit(1)
@@ -129,7 +129,15 @@ setup(
     author='Wyplay',
     author_email='noreply@wyplay.com',
     url='http://www.wyplay.com',
-    install_requires=['paramiko', 'portage', 'requests'],
+    install_requires=[
+        'paramiko',
+        'portage',
+        'profilechecker',
+        'requests',
+        'xintegtools',
+        'xportage',
+        'xutils',
+    ],
     packages=['xbuilder', 'xbuilder.plugins'],
     scripts=[
         'scripts/xbuilder',

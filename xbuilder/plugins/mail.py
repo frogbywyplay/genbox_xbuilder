@@ -19,9 +19,9 @@
 #
 #
 
+import contextlib
+import errno
 import os
-from os.path import exists, basename
-
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -39,68 +39,67 @@ MAIL_MSG_NOK = '[Build] FAILED on %s for %s at %s'
 
 
 class XBuilderMailPlugin(XBuilderPlugin):
-    def __attach_text(self, file, msg):
-        if type(file) is str:
-            fd = open(file)
-            file_name = basename(file)
-        else:
-            fd = file
-            file_name = basename(file.name)
-
+    @staticmethod
+    def __attach_text(fd, msg):
         pj = MIMEText(fd.read())
-        if type(file) is str:
-            fd.close()
-
-        pj.add_header('Content-Disposition', 'attachment', filename=file_name)
+        pj.add_header('Content-Disposition', 'attachment', filename=os.path.basename(fd.name))
         msg.attach(pj)
 
-    def release(self, build_info):
+    def release_success(self, build_info):
+        subject = MAIL_MSG_OK
+        if 'analyzer' in build_info:
+            body = MIMEText(MAIL_BODY + '\n\n' + build_info['analyzer'] + '\n\n' + os.getenv('MAIL_BODY', ''))
+        else:
+            body = MIMEText(MAIL_BODY + '\n\n' + os.getenv('MAIL_BODY', ''))
+        with self.release_mail(build_info, subject, body):
+            pass
+
+    def release_failure(self, build_info):
+        subject = MAIL_MSG_NOK
+        body = MIMEText(
+            MAIL_BODY_FAILED % {
+                'uri': self.cfg['mail']['uri'],
+                'category': build_info['category'],
+                'pkg_name': build_info['pkg_name'],
+                'version': build_info['version'],
+                'arch': build_info['arch']
+            }
+        )
+        with self.release_mail(build_info, subject, body) as msg:
+            try:
+                with open(self.log_file, 'r') as fd:
+                    self.log_fd.flush()
+                    try:
+                        fd.seek(-self.cfg['mail']['log_size'], os.SEEK_END)
+                        fd.readline()
+                    except IOError:
+                        # The file might be less than MAIL_LOG_SIZE
+                        fd.seek(0, os.SEEK_SET)
+                    self.__attach_text(fd, msg)
+            except IOError as e:  # no logfile
+                if e.errno != errno.ENOENT:
+                    raise
+
+    @contextlib.contextmanager
+    def release_mail(self, build_info, subject, body):
         self.info('Sending mails')
         build_time = time.strftime('%Y-%m-%d %H:%M:%S')
         build_name = '%s/%s-%s' % (build_info['category'], build_info['pkg_name'], build_info['version'])
 
-        s = smtplib.SMTP(self.cfg['mail']['smtp'])
         msg = MIMEMultipart()
 
         msg['From'] = os.getenv('MAIL_FROM', self.cfg['mail']['from'])
         msg['To'] = os.getenv('MAIL_TO', self.cfg['mail']['to'])
 
-        if build_info['success']:
-            subject = MAIL_MSG_OK
-            if 'analyzer' in build_info:
-                body = MIMEText(MAIL_BODY + '\n\n' + build_info['analyzer'] + '\n\n' + os.getenv('MAIL_BODY', ''))
-            else:
-                body = MIMEText(MAIL_BODY + '\n\n' + os.getenv('MAIL_BODY', ''))
-        else:
-            subject = MAIL_MSG_NOK
-            body = MIMEText(
-                MAIL_BODY_FAILED % {
-                    'uri': self.cfg['mail']['uri'],
-                    'category': build_info['category'],
-                    'pkg_name': build_info['pkg_name'],
-                    'version': build_info['version'],
-                    'arch': build_info['arch']
-                }
-            )
-            if exists(self.log_file):
-                self.log_fd.flush()
-                fd = open(self.log_file, 'r')
-                try:
-                    fd.seek(-self.cfg['mail']['log_size'], os.SEEK_END)
-                    fd.readline()
-                except IOError:
-                    # The file might be less than MAIL_LOG_SIZE
-                    fd.seek(0, os.SEEK_SET)
-                self.__attach_text(fd, msg)
-                fd.close()
-
+        yield msg
         body.add_header('Content-Disposition', 'inline')
         msg.attach(body)
         msg['Subject'] = subject % (build_name, build_info['arch'], build_time)
 
+        s = smtplib.SMTP(self.cfg['mail']['smtp'])
         s.sendmail(msg['From'], msg['To'], msg.as_string())
         s.quit()
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderMailPlugin)

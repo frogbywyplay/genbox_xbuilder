@@ -19,10 +19,12 @@
 #
 #
 
-from urllib2 import urlopen, HTTPError, URLError
-from urllib import urlencode
-from xbuilder.plugin import XBuilderPlugin
+import requests
+from requests.exceptions import RequestException
+
 from xutils import output
+
+from xbuilder.plugin import XBuilderPlugin
 
 
 class XBuilderNotifierPlugin(XBuilderPlugin):
@@ -30,11 +32,10 @@ class XBuilderNotifierPlugin(XBuilderPlugin):
         output.info('Notifier: send %s information' % step)
         params['step'] = step
         try:
-            urlopen(self.cfg['notifier']['uri'], urlencode(params))
-        except HTTPError, e:
+            requests.get(self.cfg['notifier']['uri'], params)
+            return None
+        except RequestException as e:
             return output.error('HTTPError: %s' % e)
-        except URLError, e:
-            return output.error('URLError: %s' % e)
 
     def prebuild(self, target_ebuild, arch=None):
         # 2013-10-09: no need
@@ -55,5 +56,5 @@ class XBuilderNotifierPlugin(XBuilderPlugin):
         self.__notify('release', params)
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderNotifierPlugin)

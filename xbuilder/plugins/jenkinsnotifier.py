@@ -19,11 +19,17 @@
 #
 #
 
+from __future__ import absolute_import
+
+import json
+import re
 from hashlib import sha1
-from re import compile
+
 from requests import codes, get, post
-from xbuilder.plugin import XBuilderPlugin
+
 from xutils import output, XUtilsError
+
+from xbuilder.plugin import XBuilderPlugin
 
 
 def create_sha1(pattern):
@@ -33,7 +39,7 @@ def create_sha1(pattern):
 
 
 class Jenkins(object):
-    def __init__(self, server, credentials=dict()):
+    def __init__(self, server, credentials=None):
         if not server:
             raise XUtilsError('Empty uri as Jenkins server to notify.')
         self.server = server
@@ -51,7 +57,8 @@ class Jenkins(object):
             return dict()
         return {request.json()['crumbRequestField']: request.json()['crumb']}
 
-    def is_token(self, token):
+    @staticmethod
+    def is_token(token):
         if len(token) != 32:
             return False
         try:
@@ -80,7 +87,7 @@ class Jenkins(object):
             return self.jobs
         return request.json()
 
-    def build(self, job, uri=str(), jobparams=dict()):
+    def build(self, job, uri=None, jobparams=None):
         if not uri:
             uri = '%s/job/%s/build' % (self.server, job)
         params = self.crumb
@@ -88,11 +95,18 @@ class Jenkins(object):
         params['token'] = create_sha1(job)
         params['cause'] = 'xbuilder released a prebuilt.'
         if jobparams:
-            params[
-                'json'
-            ] = '{"parameter": [{"name":"TARGET_NAME", "value":"%s"}, {"name":"TARGET_ARCH", "value":"%s"}, {"name":"VERSION", "value":"%s"}]}' % (
-                jobparams['name'], jobparams['arch'], jobparams['version']
-            )
+            params['json'] = json.dumps({
+                'parameter': [{
+                    'name': 'TARGET_NAME',
+                    'value': jobparams['name']
+                }, {
+                    'name': 'TARGET_ARCH',
+                    'value': jobparams['arch']
+                }, {
+                    'name': 'VERSION',
+                    'value': jobparams['version']
+                }]
+            })
         request = post(uri, auth=self.credentials, data=params)
         if request.status_code != 201:
             output.error('jenkinsnotifier: Unable to build %s with uri %s.' % (job, uri))
@@ -112,45 +126,42 @@ class XBuilderJenkinsNotifierPlugin(XBuilderPlugin):
             }
         )
 
-    def release(self, build_info):
-        if not build_info['success']:
+    def release_success(self, build_info):
+        if not self.params['jobname']:
+            output.warn('jenkinsnotifier: no jobname defined in configuration file.')
             return
 
-        if self.params['jobname']:
-            jobname = str()
-            my_match = {
-                'category': build_info['category'],
-                'package': build_info['pkg_name'],
-                'version': build_info['version'],
-                'arch': build_info['arch']
-            }
-            my_regexp = compile('\${([a-z]+)}')
-            for substring in my_regexp.split(self.params['jobname']):
-                jobname += my_match[substring] if substring in my_match.keys() else substring
-            for job in self.jenkins.listjobs():
-                if job['name'] == jobname:
-                    actions = self.jenkins.getjobinfo(job['name'])['actions'][0]
-                    withparams = 'with' if 'parameterDefinitions' in actions else 'without'
-                    output.info(
-                        'jenkinsnotifier: will trigger job %s %s parameters (%s).' % (jobname, withparams, job['url'])
-                    )
-                    if 'parameterDefinitions' in actions:
-                        targetname = build_info['category'] + '/' + build_info['pkg_name']
-                        self.jenkins.build(
-                            job['name'], job['url'] + '/build', {
-                                'name': targetname,
-                                'arch': build_info['arch'],
-                                'version': build_info['version']
-                            }
-                        )
-                    else:
-                        self.jenkins.build(job['name'], job['url'] + '/build')
-                    return
+        my_match = {
+            'category': build_info['category'],
+            'package': build_info['pkg_name'],
+            'version': build_info['version'],
+            'arch': build_info['arch']
+        }
+        # interpolate ${xxx} in self.params['jobname]
+        jobname = ''.join(
+            my_match.get(substring, substring) for substring in re.split(r'\${([a-z]+)}', self.params['jobname'])
+        )
+        try:
+            job = next(j for j in self.jenkins.listjobs() if j['name'] == jobname)
+        except StopIteration:
             output.warn('jenkinsnotifier: job not found on server %s', self.params['uri'])
             return
-        output.warn('jenkinsnotifier: no jobname defined in configuration file.')
-        return
+
+        actions = self.jenkins.getjobinfo(job['name'])['actions'][0]
+        withparams = 'with' if 'parameterDefinitions' in actions else 'without'
+        output.info('jenkinsnotifier: will trigger job %s %s parameters (%s).' % (jobname, withparams, job['url']))
+        if 'parameterDefinitions' in actions:
+            targetname = build_info['category'] + '/' + build_info['pkg_name']
+            self.jenkins.build(
+                job['name'], job['url'] + '/build', {
+                    'name': targetname,
+                    'arch': build_info['arch'],
+                    'version': build_info['version']
+                }
+            )
+        else:
+            self.jenkins.build(job['name'], job['url'] + '/build')
 
 
-def register(builder):
-    builder.add_plugin(XBuilderNotifierPlugin)
+def register(builder):  # pragma: no cover
+    builder.add_plugin(XBuilderJenkinsNotifierPlugin)

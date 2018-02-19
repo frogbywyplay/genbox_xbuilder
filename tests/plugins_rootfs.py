@@ -1,4 +1,4 @@
-from __future__ import with_statement
+from __future__ import print_function
 
 import contextlib
 import os
@@ -9,7 +9,6 @@ import tempfile
 import unittest
 import types
 
-from xutils import XUtilsError
 from xbuilder.plugins.rootfs import XBuilderRootfsPlugin
 
 
@@ -40,23 +39,6 @@ class TestXBuilderRootfsPlugin(unittest.TestCase):
         with open(self.tmpfl.name) as fl:
             return fl.read()
 
-    def test_check_call_stdout_ok(self):
-        plugin = XBuilderRootfsPlugin(None, None, self.tmpfl, self.tmpfl.name)
-        plugin.log_fd = self.tmpfl
-        plugin.check_call(['echo', 'hello, world!'], 'test err msg')
-        self.assertEqual(self._log(), 'hello, world!\n')
-
-    def test_check_call_stderr_ok(self):
-        plugin = XBuilderRootfsPlugin(None, None, self.tmpfl, self.tmpfl.name)
-        plugin.log_fd = self.tmpfl
-        plugin.check_call(['bash', '-c', 'echo 1>&2 "hello, world!"'], 'test err msg')
-        self.assertEqual(self._log(), 'hello, world!\n')
-
-    def test_check_call_ko(self):
-        plugin = XBuilderRootfsPlugin(None, None, self.tmpfl, self.tmpfl.name)
-        plugin.log_fd = self.tmpfl
-        self.assertRaises(XUtilsError, lambda: plugin.check_call(['cat', '/tmp/not/exist'], 'test err msg'))
-
     def test_tar_cf_root(self):
         plugin = XBuilderRootfsPlugin(None, self.tmpfl.write, self.tmpfl, self.tmpfl.name)
         plugin.log_fd = self.tmpfl
@@ -83,13 +65,13 @@ class TestXBuilderRootfsPlugin(unittest.TestCase):
         plugin = XBuilderRootfsPlugin(None, self.tmpfl.write, self.tmpfl, self.tmpfl.name)
         plugin.log_fd = self.tmpfl
         use_pixz = dict(use_pixz=False)
-        org_check_call = plugin.check_call
+        old_popen = plugin._popen  # pylint: disable=protected-access
 
-        def new_check_call(self, cmd, errmsg):
+        def new_popen(self, cmd, **kwargs):  # pylint: disable=unused-argument
             use_pixz['use_pixz'] = '-Ipixz' in cmd
-            org_check_call(cmd, errmsg)
+            return old_popen(cmd, **kwargs)  # pylint: disable=not-callable
 
-        plugin.check_call = types.MethodType(new_check_call, plugin)
+        plugin._popen = types.MethodType(new_popen, plugin)  # pylint: disable=protected-access
         shutil.copytree(os.path.join(os.path.dirname(__file__), 'workdir'), self.tmpwd)
         with chdir(self.tmpd):
             plugin.tar_cf(

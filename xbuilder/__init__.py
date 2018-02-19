@@ -18,5 +18,6 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #
+from __future__ import absolute_import
 
-from builder import XBuilder  # noqa
+from xbuilder.builder import XBuilder  # noqa

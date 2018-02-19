@@ -1,4 +1,6 @@
 [MESSAGES CONTROL]
-disable=missing-docstring
+disable=missing-docstring,invalid-name,duplicate-code,fixme
 [FORMAT]
 max-line-length=120
+[TYPECHECK]
+generated-members=codes.ok,portage.portdb

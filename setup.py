@@ -20,47 +20,42 @@
 #
 from __future__ import print_function
 
-from setuptools import setup, Command
-
+import contextlib
 import glob
 import os
 import subprocess
 import sys
 from unittest import TextTestRunner, TestLoader
 
+from setuptools import setup, Command
 
-class TestCoverage(object):
-    def __init__(self):
-        try:
-            import coverage
-            self.cov = coverage
-        except:
-            print("Can't find the coverage module")
-            self.cov = None
-            return
+try:
+    import coverage
 
-    def start(self):
-        if not self.cov:
-            return
-        self.cov.erase()
-        self.cov.start()
+    @contextlib.contextmanager
+    def cov(packages):
+        def report_list_aux():
+            for package in packages:
+                for root, _, files in os.walk(package):
+                    for fname in files:
+                        if fname.endswith('.py'):
+                            yield os.path.join(root, fname)
 
-    def stop(self):
-        if not self.cov:
-            return
-        self.cov.stop()
-
-    def report(self, packages):
-        if not self.cov:
-            return
+        report_list = list(set(report_list_aux()))
+        c = coverage.Coverage()
+        c.erase()
+        c.start()
+        yield
+        c.stop()
         print('\nCoverage report:')
-        report_list = []
-        for package in self.distribution.packages:
-            for root, dir, files in os.walk(package):
-                for file in files:
-                    if file.endswith('.py'):
-                        report_list.append('%s/%s' % (root, file))
-        self.cov.report(report_list)
+        c.report(report_list)
+
+except ImportError:
+    print("Can't find the coverage module")
+
+    @contextlib.contextmanager
+    def cov(_):
+        yield
 
 
 class TestCommand(Command):
@@ -68,7 +63,7 @@ class TestCommand(Command):
     boolean_options = ['coverage']
 
     def initialize_options(self):
-        self.coverage = False
+        self.coverage = False  # pylint: disable=attribute-defined-outside-init
 
     def finalize_options(self):
         pass
@@ -77,22 +72,16 @@ class TestCommand(Command):
         '''
         Finds all the tests modules in tests/, and runs them.
         '''
-        if self.coverage:
-            cov = TestCoverage()
-            cov.start()
 
-        testfiles = []
-        for t in glob.glob(os.path.join(self._dir, 'tests', '*.py')):
-            if not t.endswith('__init__.py'):
-                testfiles.append('.'.join(['tests', os.path.splitext(os.path.basename(t))[0]]))
+        testfiles = [
+            '.'.join(['tests', os.path.splitext(os.path.basename(t))[0]])
+            for t in glob.glob(os.path.join('tests', '*.py')) if not t.endswith('__init__.py')
+        ]
 
-        tests = TestLoader().loadTestsFromNames(testfiles)
-        t = TextTestRunner(verbosity=1)
-        ts = t.run(tests)
-
-        if self.coverage:
-            cov.stop()
-            cov.report(self.distribution.packages)
+        with cov(self.distribution.packages):
+            tests = TestLoader().loadTestsFromNames(testfiles)
+            t = TextTestRunner(verbosity=1)
+            ts = t.run(tests)
 
         if not ts.wasSuccessful():
             sys.exit(1)
@@ -109,7 +98,7 @@ class FmtCommand(Command):
 
     @staticmethod
     def _find_py():
-        """ find -name \*.py """
+        r""" find -name \*.py """
         for root, _, files in os.walk('.'):
             for fname in files:
                 if os.path.splitext(fname)[1] == '.py':
@@ -130,6 +119,7 @@ setup(
     author_email='noreply@wyplay.com',
     url='http://www.wyplay.com',
     install_requires=[
+        'python-gnupg',
         'paramiko',
         'portage',
         'profilechecker',
@@ -139,14 +129,16 @@ setup(
         'xutils',
     ],
     packages=['xbuilder', 'xbuilder.plugins'],
-    scripts=[
-        'scripts/xbuilder',
-    ],
     data_files=[('/etc', ['config/xbuilder.conf'])],
-    long_description="""xbuilder tools for genbox""",
+    long_description='xbuilder tools for genbox',
     cmdclass={
         'test': TestCommand,
         'fmt': FmtCommand,
     },
-    tests_require=['coverage']
+    tests_require=['coverage'],
+    entry_points={
+        'console_scripts': [
+            'xbuilder = xbuilder.xbuilder:main',
+        ],
+    },
 )

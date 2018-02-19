@@ -21,67 +21,64 @@
 
 
 import bz2
-import contextlib
 import os
-
-from subprocess import Popen
-
-from xbuilder.plugin import XBuilderPlugin
-from xbuilder.consts import XBUILDER_REPORT_FILE
+import shutil
 
 from xintegtools.xreport import XReport, XReportXMLOutput
 
 from xutils import XUtilsError
 
-import bz2
+from xbuilder.plugin import XBuilderPlugin
+from xbuilder.consts import XBUILDER_REPORT_FILE
 
 
 class XBuilderXreportPlugin(XBuilderPlugin):
+    def __init__(self, *args, **kwargs):
+        super(XBuilderXreportPlugin, self).__init__(*args, **kwargs)
+        self.report_file = None
+        self.report_host_file = None
+
     def postbuild(self, build_info):
         self.info('Generating report with xreport')
+
         workdir = self.cfg['build']['workdir']
-        xr = XReport(root=workdir + '/root', portage_configroot=workdir + '/root')
+        wroot = os.path.join(workdir, 'root')
+        xr = XReport(root=wroot, portage_configroot=wroot)
         xr.vdb_create()
-        self.report_file = '/'.join([workdir, XBUILDER_REPORT_FILE])
-        fd = bz2.BZ2File(self.report_file, 'w')
-        XReportXMLOutput(errors_only=False).process(xr, fd)
-        fd.close()
+
+        self.report_file = os.path.join(workdir, XBUILDER_REPORT_FILE)
+        with bz2.BZ2File(self.report_file, 'w') as fd:
+            XReportXMLOutput(errors_only=False).process(xr, fd)
 
         hostxr = XReport()
         hostxr.vdb_create()
-        self.report_host_file = '/'.join([workdir, 'host-' + XBUILDER_REPORT_FILE])
-        hostfd = bz2.BZ2File(self.report_host_file, 'w')
-        XReportXMLOutput(errors_only=False).process(hostxr, hostfd)
-        hostfd.close()
+
+        self.report_host_file = os.path.join(workdir, 'host-' + XBUILDER_REPORT_FILE)
+        with bz2.BZ2File(self.report_host_file, 'w') as hostfd:
+            XReportXMLOutput(errors_only=False).process(hostxr, hostfd)
+
         return self.report_file, self.report_host_file
 
     def release(self, build_info):
-        archive = self.cfg['release']['archive_dir']
-
-        dest_dir = '/'.join([
-            archive, build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch']
-        ])
-
-        if not exists(dest_dir):
-            os.makedirs(dest_dir)
+        dest_dir = self._archive_dir(
+            build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch']
+        )
+        self._makedirs(dest_dir, exist_ok=True)
 
         self.info('Releasing report file')
         self.log_fd.flush()
-        ret = Popen(['cp', self.report_file, '/'.join([dest_dir, XBUILDER_REPORT_FILE])],
-                    bufsize=-1,
-                    stdout=self.log_fd,
-                    stderr=self.log_fd,
-                    shell=False,
-                    cwd=None).wait()
-        Popen(['cp', self.report_host_file, '/'.join([dest_dir, 'host-' + XBUILDER_REPORT_FILE])],
-              bufsize=-1,
-              stdout=self.log_fd,
-              stderr=self.log_fd,
-              shell=False,
-              cwd=None).wait()
-        if ret != 0:
+        try:
+            shutil.copy(self.report_file, os.path.join(dest_dir, XBUILDER_REPORT_FILE))
+            failed = False
+        except (IOError, OSError):
+            failed = True
+        try:
+            shutil.copy(self.report_host_file, os.path.join(dest_dir, 'host-' + XBUILDER_REPORT_FILE))
+        except (IOError, OSError):
+            pass
+        if failed:
             raise XUtilsError('Failed to release the report file')
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderXreportPlugin)

@@ -20,9 +20,7 @@
 #
 
 import os
-from os.path import exists
 
-from subprocess import Popen
 from xutils import XUtilsError
 
 from xbuilder.plugin import XBuilderPlugin
@@ -37,21 +35,13 @@ class XBuilderHardcatrazPlugin(XBuilderPlugin):
         check_rootfs = '/opt/alcatraz-tools/hardcatraz_check_rootfs.py'
 
         self.info('config %s' % hardcatraz_file)
-        if exists(hardcatraz_file) and exists(check_rootfs):
+        if all(os.path.exists(fname) for fname in [hardcatraz_file, check_rootfs]):
             self.info('Running xexec %s' % check_rootfs)
             self.log_fd.flush()
-            ret = Popen(
-                ['xexec', check_rootfs],
-                env=os.environ.copy(),  # keep LC_ALL, etc.
-                bufsize=-1,
-                stdout=self.log_fd,
-                stderr=self.log_fd,
-                shell=False,
-                cwd=None
-            ).wait()
+            ret = self._popen(['xexec', check_rootfs], bufsize=-1).wait()
             if ret != 0:
                 raise XUtilsError('failed to run hardcataz postbuild script')
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderHardcatrazPlugin)

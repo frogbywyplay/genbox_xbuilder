@@ -23,11 +23,15 @@ from __future__ import print_function
 from os import stat, listdir
 from os.path import exists, realpath
 from functools import partial
+
 from paramiko import AutoAddPolicy, SFTPClient, SSHClient
 from paramiko.ssh_exception import AuthenticationException, BadHostKeyException, SSHException
+
 from portage.output import colorize
-from xbuilder.plugin import XBuilderPlugin
+
 from xutils import XUtilsError
+
+from xbuilder.plugin import XBuilderPlugin
 
 
 class XBuilderMirrorPlugin(XBuilderPlugin):
@@ -49,7 +53,7 @@ class XBuilderMirrorPlugin(XBuilderPlugin):
         except SSHException:
             raise XUtilsError('Unable to establish a SSH connection to %s' % self.ssh['server'])
         finally:
-            stdin, stdout, stderr = ssh.exec_command(
+            stdin, stdout, stderr = ssh.exec_command(  # pylint: disable=unused-variable
                 'touch %s/foo && rm %s/foo' % (self.ssh['base_dir'], self.ssh['base_dir'])
             )
             if stderr.read():
@@ -59,15 +63,12 @@ class XBuilderMirrorPlugin(XBuilderPlugin):
                 )
             ssh.close()
 
-    def release(self, build_info):
+    def release_success(self, build_info):
         def progress(filename, transferred, total):
             print(
                 colorize('fuchsia', ' * %s transfer in progress: %02d%%.\r' % (filename, transferred * 100 / total)),
                 end='\r'
             )
-
-        if build_info['success'] != True:
-            return
 
         ssh = SSHClient()
         try:
@@ -80,7 +81,7 @@ class XBuilderMirrorPlugin(XBuilderPlugin):
             self.ssh['base_dir'], build_info['category'], build_info['pkg_name'], build_info['version'],
             build_info['arch']
         ])
-        stdin, stdout, stderr = ssh.exec_command('mkdir -p %s' % dest_dir)
+        stdin, stdout, stderr = ssh.exec_command('mkdir -p %s' % dest_dir)  # pylint: disable=unused-variable
         if stderr.read():
             raise XUtilsError('Unable to create directory %s on server %s' % (dest_dir, self.ssh['server']))
 
@@ -117,5 +118,5 @@ class XBuilderMirrorPlugin(XBuilderPlugin):
         ssh.close()
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderMirrorPlugin)

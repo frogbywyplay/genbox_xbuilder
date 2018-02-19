@@ -18,9 +18,10 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #
+import os
 
 XBUILDER_SYS_CFG = '/etc/xbuilder.conf'
-XBUILDER_USER_CFG = '.xbuilder.conf'
+XBUILDER_USER_CFG = os.path.expanduser('~/.xbuilder.conf')
 
 XBUILDER_LOGFILE = 'build.log'
 XBUILDER_REPORT_FILE = 'report.xml.bz2'

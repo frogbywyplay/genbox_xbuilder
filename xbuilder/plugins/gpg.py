@@ -20,39 +20,45 @@
 #
 
 import os
+import logging
 
 import gnupg
 
-from portage import config
+from portage import config  # pylint: disable=no-name-in-module
 
 from xutils import XUtilsError
 
 from xbuilder.plugin import XBuilderPlugin
 
-import logging
-
 
 class XBuilderGnuPGPlugin(XBuilderPlugin):
-    def postbuild(self, build_info):
+    def __init__(self, *args, **kwargs):
+        super(XBuilderGnuPGPlugin, self).__init__(*args, **kwargs)
+        self.gpg_allkeyids = None
+        self.log_handler = None
+        self.gpg = None
+
+    def postbuild_success(self, build_info):
         """ Encryption of rootfs.tgz """
-        if build_info['success'] != True:
-            return
-        keysfile = ''
         workdir = self.cfg['build']['workdir']
+        paths = [os.path.join(workdir, 'root/etc/portage/gpg')]
         target_root = os.path.join(workdir, 'root')
         profile_paths = config(config_root=target_root, target_root=target_root).profiles
-        paths = [os.path.join(workdir, 'root/etc/portage/gpg')]
         paths.extend(profile_paths)
-        for path in paths[-1::-1]:
-            path = os.path.join(path, 'pubring.gpg')
-            if os.path.isfile(path):
-                keysfile = path
-                break
-        if not keysfile:
+
+        def find_pubring():
+            for path in reversed(paths):
+                path = os.path.join(path, 'pubring.gpg')
+                if os.path.isfile(path):
+                    yield path
+
+        try:
+            keysfile = next(find_pubring())
+        except StopIteration:
             self.info('No encryption on this target')
             return
         self.redirect_logging()
-        self.gpg = gnupg.GPG(externalkeyring=keysfile)
+        self.gpg = gnupg.GPG(keyring=keysfile)
         self.gpg_allkeyids = [i['keyid'] for i in self.gpg.list_keys()]
         if not self.gpg_allkeyids:
             self.clean_up()
@@ -78,30 +84,29 @@ class XBuilderGnuPGPlugin(XBuilderPlugin):
         logging.getLogger('gnupg').removeHandler(self.log_handler)
         self.log_handler.close()
 
-    def process_file(self, type, build_info):
+    def process_file(self, type_, build_info):
         fn = os.path.join(
             self.cfg['build']['workdir'], '%s-%s_%s.tar.%s' %
-            (build_info['pkg_name'], build_info['version'], type, self.cfg['release']['compression'])
+            (build_info['pkg_name'], build_info['version'], type_, self.cfg['release']['compression'])
         )
-        if type == 'debuginfo' and not os.path.isfile(fn):
+        if type_ == 'debuginfo' and not os.path.isfile(fn):
             return
         if not os.path.isfile(fn):
             self.clean_up()
             raise XUtilsError('File %r not found for encrypt.' % fn)
-        tarball = open(fn, 'rb')
-        self.info('Encrypting %s archive' % type)
-        encrypted = self.gpg.encrypt_file(
-            tarball, self.gpg_allkeyids, always_trust=True, output=fn + '.gpg', armor=False
-        )
-        if not encrypted:
-            self.clean_up()
-            raise XUtilsError(
-                'encrypt_file() for %s failed, file name is %r, see GnuPG log %r.' %
-                (type, fn, self.cfg['gpg']['logfile'])
+        with open(fn, 'rb') as tarball:
+            self.info('Encrypting %s archive' % type_)
+            encrypted = self.gpg.encrypt_file(
+                tarball, self.gpg_allkeyids, always_trust=True, output=fn + '.gpg', armor=False
             )
-        tarball.close()
+            if not encrypted:
+                self.clean_up()
+                raise XUtilsError(
+                    'encrypt_file() for %s failed, file name is %r, see GnuPG log %r.' %
+                    (type_, fn, self.cfg['gpg']['logfile'])
+                )
         os.remove(fn)
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderGnuPGPlugin)

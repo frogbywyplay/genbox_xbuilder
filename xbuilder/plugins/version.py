@@ -20,9 +20,7 @@
 #
 
 import os
-from os.path import exists
-
-from shutil import copy
+import shutil
 
 from xbuilder.plugin import XBuilderPlugin
 
@@ -30,23 +28,23 @@ from xbuilder.plugin import XBuilderPlugin
 class XBuilderXversionPlugin(XBuilderPlugin):
     def postbuild(self, build_info):
         self.info('Filling version in /etc/version')
-        rootdir = self.cfg['build']['workdir'] + '/root'
-        redistdir = rootdir + '/redist'
-        versionfile = rootdir + '/etc/' + os.path.dirname(os.readlink(rootdir + '/etc/portage/make.profile')
-                                                          ) + '/version'
+        rootdir = os.path.join(self.cfg['build']['workdir'], 'root')
+        redistdir = os.path.join(rootdir, 'redist')
 
-        if exists(versionfile):
-            copy(versionfile, rootdir + '/etc')
-            copy(versionfile, redistdir + '/etc')
+        # TODO ???
+        versionfile = os.path.join(
+            rootdir, 'etc', os.path.dirname(os.readlink(os.path.join(rootdir, 'etc/portage/make.profile'))), 'version'
+        )
+        if os.path.exists(versionfile):
+            shutil.copy(versionfile, os.path.join(rootdir, 'etc'))
+            shutil.copy(versionfile, os.path.join(redistdir, 'etc'))
 
-        fd = open(rootdir + '/etc/version', 'a')
-        fd.write(build_info['version'] + '\n')
-        fd.close()
+        with open(os.path.join(rootdir, 'etc/version'), 'a') as fd:
+            fd.write(build_info['version'] + '\n')
 
-        fd = open(redistdir + '/etc/version', 'a')
-        fd.write(build_info['version'] + '\n')
-        fd.close()
+        with open(os.path.join(redistdir, 'etc/version'), 'a') as fd:
+            fd.write(build_info['version'] + '\n')
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderXversionPlugin)

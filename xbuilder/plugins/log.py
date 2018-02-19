@@ -20,8 +20,9 @@
 #
 
 import os
-from os.path import exists, basename
-from subprocess import Popen
+import shutil
+import errno
+import subprocess
 
 from xutils import XUtilsError
 
@@ -29,39 +30,48 @@ from xbuilder.plugin import XBuilderPlugin
 
 
 class XBuilderLogPlugin(XBuilderPlugin):
-    def release(self, build_info):
-        archive = self.cfg['release']['archive_dir']
+    def release_success(self, build_info):
+        def hook(_):
+            pass
 
-        dest_dir = '/'.join([
-            archive, build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch']
-        ])
+        return self.release_log(build_info, hook)
 
-        if not exists(dest_dir):
-            os.makedirs(dest_dir)
+    def release_failure(self, build_info):
+        def hook(destdir):
+            with open(os.path.join(destdir, 'failed'), 'w'):
+                pass
 
-        if build_info['success'] != True:
-            failed = open(dest_dir + '/failed', 'w')
-            failed.close()
+        return self.release_log(build_info, hook)
 
-        if exists(self.log_file):
+    def release_log(self, build_info, hook):
+        dest_dir = self._archive_dir(
+            build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch']
+        )
+        self._makedirs(dest_dir, exist_ok=True)
+
+        hook(dest_dir)
+
+        if os.path.exists(self.log_file):
             self.info('Releasing log file')
             self.log_fd.flush()
-            dest_log = '/'.join([dest_dir, basename(self.log_file)])
-            dest_log_bz2 = '%s.bz2' % dest_log
-            ret = Popen(['cp', self.log_file, dest_log], bufsize=-1, stdout=None, stderr=None, shell=False,
-                        cwd=None).wait()
-            if ret != 0:
+            dest_log = os.path.join(dest_dir, os.path.basename(self.log_file))
+            try:
+                shutil.copy(self.log_file, dest_log)
+            except:
                 raise XUtilsError('Failed to release the log file')
 
-
-# compress in bzip2
-# 22455: Reusing version number of a failed target is not possible
-            if exists(dest_log_bz2):
+            # compress in bzip2
+            # 22455: Reusing version number of a failed target is not possible
+            dest_log_bz2 = '%s.bz2' % dest_log
+            try:
                 os.remove(dest_log_bz2)
-            ret = Popen(['bzip2', dest_log], bufsize=-1, stdout=None, stderr=None, shell=False, cwd=None).wait()
+            except OSError as e:
+                if e.errno != errno.ENOENT:
+                    raise
+            ret = subprocess.Popen(['bzip2', dest_log], bufsize=-1).wait()
             if ret != 0:
                 raise XUtilsError('Failed to compress log file')
 
 
-def register(builder):
+def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderLogPlugin)

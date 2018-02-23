@@ -21,9 +21,7 @@
 
 from __future__ import absolute_import
 
-import sys
-
-from optparse import OptionParser, Option
+import argparse
 
 from xutils import die, XUtilsError
 
@@ -31,72 +29,50 @@ from xbuilder.consts import XBUILDER_DEFTYPE
 from xbuilder.builder import XBuilder
 
 
-class MultiOption(Option):
-    ACTIONS = Option.ACTIONS + ('multi_store', )
-    STORE_ACTIONS = Option.STORE_ACTIONS + ('multi_store', )
-    TYPED_ACTIONS = Option.TYPED_ACTIONS + ('multi_store', )
-    ALWAYS_TYPED_ACTIONS = Option.ALWAYS_TYPED_ACTIONS + ('multi_store', )
-
-    def take_action(self, action, dest, opt, value, values, parser):  # pylint: disable=too-many-arguments
-        if action == 'multi_store':
-            lvalue = value.split(',')
-            values.ensure_value(dest, []).extend(lvalue)
-        else:
-            Option.take_action(self, action, dest, opt, value, values, parser)
+class MultiOption(argparse.Action):  # pylint: disable=too-few-public-methods
+    def __call__(self, parser, namespace, values, option_string=None):
+        items = values.split(',')
+        setattr(namespace, self.dest, items)
 
 
-options = [
-    MultiOption(
-        None,
+def make_parser():
+    parser = argparse.ArgumentParser(description='Builder tool for genbox-ng.')
+    parser.register('action', 'multi_store', MultiOption)
+    parser.add_argument(
         '--ov-rev',
         action='multi_store',
-        dest='ov_list',
-        help='Fix an overlay revision (syntax: "ov:rev[,ov:rev...]").'
-    ),
-    Option('-r', '--rev', action='store', dest='profile_rev', help='Fix profile revision.'),
-    Option('-t', '--type', action='store', dest='build_type', help='Set the type of build: beta (default) or release.'),
-    Option('-c', '--config', action='store', dest='config', help='Use an alternate config file.'),
-    Option('-a', '--arch', action='store', dest='arch', help='Specify the target arch to build.'),
-    Option(None, '--as', action='store', dest='user_version', help="Use user ebuild's name"),
-    #Option(None, '--autobump', action='store', dest='autobump', help='Bump every package matching the regexp.'),
-]
+        help='Fix an overlay revision (syntax: "ov:rev[,ov:rev...]").',
+        default=list()
+    )
+    parser.add_argument('-r', '--rev', help='Fix profile revision.')
+    parser.add_argument(
+        '-t', '--type', help='Set the type of build: beta (default) or release.', default=XBUILDER_DEFTYPE
+    )
+    parser.add_argument('-c', '--config', help='Use an alternate config file.')
+    parser.add_argument('-a', '--arch', help='Specify the target arch to build.')
+    parser.add_argument('--as', dest='user_version', help="Use user ebuild's name")
+    parser.add_argument('pkg_atom', help='target package atom')
+    return parser
 
 
 def main():
-    parser = OptionParser(
-        usage='%prog [options] pkg_atom', description='Builder tool for genbox-ng.', option_list=options
-    )
-
-    values, args = parser.parse_args()
+    parser = make_parser()
+    args = parser.parse_args()
 
     try:
-        pkg_atom, = args
-    except ValueError:
-        parser.error('a target pkg_atom is required')
-
-    config = values.ensure_value('config', None)
-    type_ = values.ensure_value('type', XBUILDER_DEFTYPE)
-
-    try:
-        builder = XBuilder(config, type_)
+        builder = XBuilder(args.config, args.type)
     except XUtilsError as e:
         die(str(e))
 
-    rev = (
-        values.ensure_value('profile_rev', str()), dict(ov.split(':') for ov in values.ensure_value('ov_list', list()))
-    )
+    rev = (args.rev, dict(ov.split(':') for ov in args.ov_rev))
 
-    arch = values.ensure_value('arch', None)
-    user_version = None
-    if values.ensure_value('user_version', None):
-        user_version = 'user:%s' % values.user_version
+    if args.user_version:
+        user_version = 'user:%s' % args.user_version
+    else:
+        user_version = None
 
     try:
-        success = builder.run(pkg_atom, rev, arch, name=user_version)
-        if success:
-            sys.exit(0)
-        else:
-            sys.exit(1)
+        return not builder.run(args.pkg_atom, rev, args.arch, name=user_version)
     except XUtilsError as e:
         builder.cleanup()
         die(str(e))

@@ -7,8 +7,6 @@ from xutils import warn
 
 from xbuilder.plugin import XBuilderPlugin
 
-BUILD_LOG_BUFSIZE = 1024 * 1024 * 2  # 2Mo should be enough
-
 
 class XBuilderSymlinkPlugin(XBuilderPlugin):
     """ target are puts in arch_dir/category/name/arch/version with ACL set at 'arch' level

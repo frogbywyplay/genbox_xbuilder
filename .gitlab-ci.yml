@@ -1,7 +1,55 @@
-copyright:
-  tags:
-    - bash
-  image: docker.wyplay.com/tools/copyright-updater:1.7
-  script:
-    - copyright-updater-ci-year.sh
+# needs one secret SSH_PRIVATE_KEY
 
+stages:
+  - static
+  - tests
+
+fmt:
+  stage: static
+  image: python:2-alpine
+  before_script:
+    - pip install unify yapf
+  script:
+    - python tests/fmt.py
+
+pylint:
+  stage: static
+  image: docker.wyplay.com/tools/genbox:18.01.3
+  before_script:
+    - echo -e "\nHost packages.wyplay.com\n  User cjouve" >> /root/.ssh/config
+    - eval $(ssh-agent)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
+    - echo -e "dev-python/astroid\ndev-python/pylint" >> /etc/portage/package.keywords/test
+    - emerge pylint
+    - emerge --onlydeps xbuilder
+  script:
+    - pylint setup.py xbuilder tests
+
+pyflakes:
+  stage: static
+  image: docker.wyplay.com/tools/genbox:18.01.3
+  before_script:
+    - echo -e "\nHost packages.wyplay.com\n  User cjouve" >> /root/.ssh/config
+    - eval $(ssh-agent)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
+    - emerge flake8
+    - emerge --onlydeps xbuilder
+  script:
+    - flake8 setup.py xbuilder tests
+
+tests:
+  stage: tests
+  image: docker.wyplay.com/tools/genbox:18.01.3
+  before_script:
+    - echo -e "\nHost packages.wyplay.com\n  User cjouve" >> /root/.ssh/config
+    - eval $(ssh-agent)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
+    - echo -e "app-arch/pixz" >> /etc/portage/package.keywords/test
+    - emerge --onlydeps xbuilder
+    - emerge pixz mtd-utils
+    - emerge coverage
+  script:
+    - python setup.py test

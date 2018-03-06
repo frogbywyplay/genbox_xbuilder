@@ -33,7 +33,7 @@ class XBuilderAnalyzerPlugin(XBuilderPlugin):
     @staticmethod
     def validateLogfile(package, config_, target):  # pylint: disable=too-many-locals
         try:
-            my_root = os.path.join('/usr/targets', os.getenv('CURRENT_TARGET', target), 'root')
+            my_root = os.path.join('/usr/targets', os.getenv('CURRENT_TARGET', target), 'root/')
             my_trees = create_trees(config_root=my_root, target_root=my_root)
             portage_db = my_trees[my_root]['vartree'].dbapi
             [cpv] = portage_db.match(package)

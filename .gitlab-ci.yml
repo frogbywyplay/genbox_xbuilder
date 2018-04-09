@@ -1,0 +1,7 @@
+copyright:
+  tags:
+    - bash
+  image: docker.wyplay.com/tools/copyright-updater:1.7
+  script:
+    - copyright-updater-ci-year.sh
+

@@ -6,4 +6,4 @@ disable=invalid-name,missing-docstring,too-many-locals,too-many-branches,too-man
 max-line-length=120
 
 [TYPECHECK]
-generated-members=color.*
+generated-members=color.*,requests.codes.*

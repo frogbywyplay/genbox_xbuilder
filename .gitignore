@@ -1,4 +1,5 @@
 *.pyc
+.vscode
 ^build
 .coverage
 tests/xb_workdir

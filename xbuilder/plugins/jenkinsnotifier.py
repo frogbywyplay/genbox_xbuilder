@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2016 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -21,11 +21,11 @@
 
 from __future__ import absolute_import
 
+import hashlib
 import json
 import re
-from hashlib import sha1
 
-from requests import codes, get, post
+import requests
 
 from xutils import output, XUtilsError
 
@@ -33,7 +33,7 @@ from xbuilder.plugin import XBuilderPlugin
 
 
 def create_sha1(pattern):
-    hasher = sha1()
+    hasher = hashlib.sha1()
     hasher.update(pattern)
     return hasher.hexdigest()
 
@@ -51,11 +51,14 @@ class Jenkins(object):
 
     def __crumb(self):
         uri = '%s/crumbIssuer/api/json' % self.server
-        request = get(uri, auth=self.credentials)
-        if request.status_code != codes.ok:
+        try:
+            response = requests.get(uri, auth=self.credentials)
+            response.raise_for_status()
+        except requests.exceptions.RequestException:
             output.warn('jenkinsnotifier: Unable to get crumb issuer.')
-            return dict()
-        return {request.json()['crumbRequestField']: request.json()['crumb']}
+            return None
+        data = response.json()
+        return {data['crumbRequestField']: data['crumb']}
 
     @staticmethod
     def is_token(token):
@@ -70,27 +73,34 @@ class Jenkins(object):
     def listjobs(self):
         uri = '%s/api/json' % self.server
         params = {'pretty': 'true'}
-        request = get(uri, auth=self.credentials, data=params)
-        if request.status_code != codes.ok:
+        try:
+            response = requests.get(uri, auth=self.credentials, data=params)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
             output.error('jenkinsnotifier: Unable to get uri %s.' % uri)
-            output.error('jenkinsnotifier: Error %d: %s.' % (request.status_code, request.reason))
-            return self.jobs
-        self.jobs = request.json()['jobs']
-        return self.jobs
+            output.error('jenkinsnotifier: Error %s.' % (e, ))
+            return None
+        return response.json()['jobs']
 
     def getjobinfo(self, job):
         uri = '%s/job/%s/api/json' % (self.server, job)
-        request = get(uri, auth=self.credentials)
-        if request.status_code != codes.ok:
+        try:
+            response = requests.get(uri, auth=self.credentials)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
             output.error('jenkinsnotifier: Unable to get uri %s.' % uri)
-            output.error('jenkinsnotifier: Error %d: %s.' % (request.status_code, request.reason))
-            return self.jobs
-        return request.json()
+            output.error('jenkinsnotifier: Error %s.' % (e, ))
+            return None
+        return response.json()
 
     def build(self, job, uri=None, jobparams=None):
         if not uri:
             uri = '%s/job/%s/build' % (self.server, job)
         params = self.crumb
+        if not params:
+            output.error('jenkinsnotifier: Unable to build %s with uri %s.' % (job, uri))
+            output.error('crumb is none')
+            return False
         params['delay'] = 60  #set a 60s delay to ensure release phase from build plugin is done
         params['token'] = create_sha1(job)
         params['cause'] = 'xbuilder released a prebuilt.'
@@ -107,10 +117,12 @@ class Jenkins(object):
                     'value': jobparams['version']
                 }]
             })
-        request = post(uri, auth=self.credentials, data=params)
-        if request.status_code != 201:
+        try:
+            response = requests.post(uri, auth=self.credentials, data=params)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
             output.error('jenkinsnotifier: Unable to build %s with uri %s.' % (job, uri))
-            output.error('jenkinsnotifier: Error %d: %s.' % (request.status_code, request.reason))
+            output.error('jenkinsnotifier: Error %s.' % (e, ))
             return False
         return True
 
@@ -141,13 +153,22 @@ class XBuilderJenkinsNotifierPlugin(XBuilderPlugin):
         jobname = ''.join(
             my_match.get(substring, substring) for substring in re.split(r'\${([a-z]+)}', self.params['jobname'])
         )
+        jobs = self.jenkins.listjobs()
+        if not jobs:
+            output.warn('no jobs could be retrieved')
+            return
         try:
-            job = next(j for j in self.jenkins.listjobs() if j['name'] == jobname)
+            job = next(j for j in jobs if j['name'] == jobname)
         except StopIteration:
             output.warn('jenkinsnotifier: job not found on server %s', self.params['uri'])
             return
 
-        actions = self.jenkins.getjobinfo(job['name'])['actions'][0]
+        jinfo = self.jenkins.getjobinfo(job['name'])
+        if not jinfo:
+            output.warn('no jobinfo could be retrieved')
+            return
+
+        actions = jinfo['actions'][0]
         withparams = 'with' if 'parameterDefinitions' in actions else 'without'
         output.info('jenkinsnotifier: will trigger job %s %s parameters (%s).' % (jobname, withparams, job['url']))
         if 'parameterDefinitions' in actions:

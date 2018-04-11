@@ -1,6 +1,4 @@
-#!/usr/bin/python
-#
-# Copyright (C) 2006-2016 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -16,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; see file COPYING.
 # If not, see <http://www.gnu.org/licenses/>.
-#
-#
+
 from __future__ import print_function
 
 import contextlib

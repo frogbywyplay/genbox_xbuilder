@@ -4,52 +4,67 @@ stages:
   - static
   - tests
 
+copyright:
+  stage: static
+  tags:
+    - tools
+  image: docker.wyplay.com/tools/copyright-updater:1.7
+  script:
+    - copyright-updater-ci-year.sh
+
 fmt:
   stage: static
-  image: python:2-alpine
+  tags:
+    - tools
+  image: docker.wyplay.com/library/python:2.7.14-alpine3.7
   before_script:
-    - pip install unify yapf
+    - pip install --index-url https://pypi-proxy.wyplay.com/root/pypi/+simple/ unify yapf
   script:
     - python tests/fmt.py
 
 pylint:
   stage: static
-  image: docker.wyplay.com/tools/genbox:18.01.3
+  tags:
+    - tools
+  image: docker.wyplay.com/tools/genbox:18.03.2
   before_script:
     - echo -e "\nHost packages.wyplay.com\n  User cjouve" >> /root/.ssh/config
     - eval $(ssh-agent)
-    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - ssh-add - <<<$SSH_PRIVATE_KEY"
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
     - echo -e "dev-python/astroid\ndev-python/pylint" >> /etc/portage/package.keywords/test
-    - emerge pylint
-    - emerge --onlydeps xbuilder
+    - http_proxy=http://repos-proxy.wyplay.com:3128 emerge pylint
+    - http_proxy=http://repos-proxy.wyplay.com:3128 emerge --onlydeps xbuilder || ([ x"$?" = x"0" ] && cat /var/log/emerge-fetch.log && false)
   script:
     - pylint setup.py xbuilder tests
 
 pyflakes:
   stage: static
-  image: docker.wyplay.com/tools/genbox:18.01.3
+  tags:
+    - tools
+  image: docker.wyplay.com/tools/genbox:18.03.2
   before_script:
     - echo -e "\nHost packages.wyplay.com\n  User cjouve" >> /root/.ssh/config
     - eval $(ssh-agent)
-    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - ssh-add - <<<$SSH_PRIVATE_KEY"
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
-    - emerge flake8
-    - emerge --onlydeps xbuilder
+    - http_proxy=http://repos-proxy.wyplay.com:3128 emerge flake8
+    - http_proxy=http://repos-proxy.wyplay.com:3128 emerge --onlydeps xbuilder
   script:
     - flake8 setup.py xbuilder tests
 
 tests:
   stage: tests
-  image: docker.wyplay.com/tools/genbox:18.01.3
+  tags:
+    - tools
+  image: docker.wyplay.com/tools/genbox:18.03.2
   before_script:
     - echo -e "\nHost packages.wyplay.com\n  User cjouve" >> /root/.ssh/config
     - eval $(ssh-agent)
-    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - ssh-add - <<<$SSH_PRIVATE_KEY"
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
-    - echo -e "app-arch/pixz" >> /etc/portage/package.keywords/test
-    - emerge --onlydeps xbuilder
-    - emerge pixz mtd-utils
-    - emerge coverage
+    - http_proxy=http://repos-proxy.wyplay.com:3128 emerge --onlydeps xbuilder
+    - http_proxy=http://repos-proxy.wyplay.com:3128 emerge pixz mtd-utils
+    - http_proxy=http://repos-proxy.wyplay.com:3128 emerge coverage
   script:
     - python setup.py test

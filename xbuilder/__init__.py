@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2014 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 # along with this program; see file COPYING.
 # If not, see <http://www.gnu.org/licenses/>.
 #
-#
+
 from __future__ import absolute_import
 
 from xbuilder.builder import XBuilder  # noqa

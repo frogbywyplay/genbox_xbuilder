@@ -21,8 +21,11 @@
 
 
 import bz2
+import contextlib
 import os
 import shutil
+
+import portage
 
 from xintegtools.xreport import XReport, XReportXMLOutput
 
@@ -30,6 +33,21 @@ from xutils import XUtilsError
 
 from xbuilder.plugin import XBuilderPlugin
 from xbuilder.consts import XBUILDER_REPORT_FILE
+
+
+@contextlib.contextmanager
+def env_override(**kwargs):
+    def saveenv():
+        for k in kwargs:
+            try:
+                yield k, os.environ[k]
+            except KeyError:
+                pass
+
+    savedenv = dict(saveenv())
+    os.environ.update(kwargs)
+    yield
+    os.environ.update(savedenv)
 
 
 class XBuilderXreportPlugin(XBuilderPlugin):
@@ -42,14 +60,17 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         self.info('Generating report with xreport')
 
         workdir = self.cfg['build']['workdir']
-        wroot = os.path.join(workdir, 'root')
+        wroot = os.path.join(workdir, 'root/')
         xr = XReport(root=wroot, portage_configroot=wroot)
         xr.vdb_create()
 
         self.report_file = os.path.join(workdir, XBUILDER_REPORT_FILE)
         with bz2.BZ2File(self.report_file, 'w') as fd:
-            XReportXMLOutput(errors_only=False).process(xr, fd)
+            with env_override(ROOT=wroot, PORTAGE_CONFIGROOT=wroot):
+                reload(portage)
+                XReportXMLOutput(errors_only=False).process(xr, fd, with_deps=True)
 
+        reload(portage)
         hostxr = XReport()
         hostxr.vdb_create()
 

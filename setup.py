@@ -1,3 +1,4 @@
+#!/usr/bin/python2
 # Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #

@@ -1,3 +1,87 @@
+2.1.9 -- 11/04/18
+- Do not fail if jenkins is not available
+- Generate depedencies in xreport
+
+2.1.8 -- 06/03/18
+- Fix analyzer plugin.
+    * Add mandatory final trailing slash to root variable used to indicate
+    portage which database we plan to query.
+
+2.1.7 -- 27/01/17
+- Fix runtime for analyzer plugin (#91003).
+- Add analyzer plugin (#91003)
+    * This plugin will, at the end of the build, parse the log of Wyplay
+     components (based on LICENSE variable value in ebuild) and check if
+     '-Wall' and '-Wextra' compiler flags are enabled. Then it will add its
+     report to the notification mail.
+
+2.1.6 -- 16/11/16
+- Install virtual/bootstrap after target creation (#88319).
+    * After target creation, we were running "xmerge world". Unfortunately,
+     it may install "virtual/libc" a bit too late (often happen with vmware
+     target). It is the reason why target is bootstrapped just after its
+     creation so that we ensure critical components like C library are
+     installed first.
+
+2.1.5 -- 14/11/16
+- Fix profile checking when warnings are fatal.
+    * In a xbuilder context, when profile is checked, no profile fixer has
+      already be run. Hence it will output a lot of warnings related to
+      unversionned packages. So add the required code so that package.mask
+      files are generated before the check and so no false warnings are
+      displayed during the profile check.
+- Fix gpg plugin runtime.
+    * GPG plugin was broken due to the use of deprecated portage API (got
+      that from a cherry pick). So fix it with the use of current portage
+      API.
+
+2.1.4 -- 12/09/16
+- Look up the GPG keyring file in all directory paths which constitute current profile.
+- Fix xbuilder behavior (#87457).
+    * Considering profilechecker corrected behavior (it does not consider
+     anymore that a missing package in packages file is an error), we have
+     to adjust xbuilder behavior to become stricter. Hence a warning
+     during the profile checking will abort the build.
+
+2.1.3 -- 01/08/16
+- Fix jenkinsnotifier plugin registration (#78456)
+- Use xz compression instead of gzip (#82935).
+    * Currently rootfs and debuginfo are compressed using gzip algorithm.
+     From this point you can choose which algorithm to use to compress
+     rootfs and debuginfo. By default it will use "xz" algorithm.
+- Add "tar_extra_opts" option for prebuilt archive.
+    * Due to some security requirements, we may want to add some extra
+     options to tar command when creating the prebuilt tarball. It is the
+     reason why "tar_extra_opts" option is introduced.
+- Update GPG plugin to assign a file pubring.gpg per profile.
+
+2.1.2 -- 01/03/16
+- add jenkinsnotifier plugin.
+    * Add a xbuilder plugin aims to notify a given Jenkins job about build
+     successful finish.
+2.1.1 -- 16/12/15
+- Add mirror plugin.
+    * Implement mirror plugin which aims to mirror prebuild on partner
+     server. This plugin just requires a SSH access on partner server with a
+     user allow to write files and create directories.
+
+2.1.0 -- 09/10/15
+- Integrate profile-checker into xbuilder.
+    * Integrate profile-checker into xbuilder flow. xbuilder will create the
+     target (using XTarget API) and then, before building it, it will check for
+     profile validity and will stop if errors are found. Of course this behavior
+     can be tuned through xbuilder configuration file. Just have a look at
+     README.rst for configuration details.
+
+2.0.1 -- 17/09/15
+- Fix a typo mistake which was preventing the creation of prebuilts.
+
+2.0.0 -- 17/09/15
+- Fix xbuilder to be compatible with updated tools like portage >= 2.2 or xtarget >= 3.0
+
+1.2.21 -- 11/04/18
+- Do not fail if jenkins is not available
+
 1.2.20 -- 07/12/17
 - Enable parallel xz compression when using xz method
   * DEPENDS on pixz unconditionnaly

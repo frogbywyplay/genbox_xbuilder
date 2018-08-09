@@ -1,3 +1,12 @@
+9999 -- 09/08/18
+- Add '--xattrs' option to tar command line when generating rootfs.
+    * This option is now always appended to tar command line as it does not
+     impact "default" targets and it is required by "hardened" ones.
+- Clean/reindent code as it was a nightmare.
+
+1.2.21 -- 11/04/18
+- Do not fail if jenkins is not available
+
 1.2.20 -- 07/12/17
 - Enable parallel xz compression when using xz method
   * DEPENDS on pixz unconditionnaly

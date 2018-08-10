@@ -1,3 +1,6 @@
+2.1.10 -- 10/08/18
+- Add --xattrs to default tar option in the rootfs plugin.
+
 2.1.9 -- 11/04/18
 - Do not fail if jenkins is not available
 - Generate depedencies in xreport

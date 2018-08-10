@@ -100,7 +100,7 @@ Configuration file relies on INI format and has the following available options:
 |                    | ``compression``           | ``xz``                                  | Compression algorithm to use to compress rootfs. Available algorithm are:     |
 |                    |                           |                                         | ``bz2``, ``gz``, ``lzma``, ``lzo``, ``xz``.                                   |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``tar_extra_opts``        | ``--xattrs``                            | Extra options to append to ``tar`` command used to generate target prebuilt   |
+|                    | ``tar_extra_opts``        | *None*                                  | Extra options to append to ``tar`` command used to generate target prebuilt   |
 |                    |                           |                                         | tarball.                                                                      |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tag_ebuilds``           | ``False``                               | Not used.                                                                     |

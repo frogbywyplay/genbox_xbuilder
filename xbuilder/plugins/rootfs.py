@@ -37,13 +37,11 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
             workdir, '%s-%s_%s.tar.%s' % (build_info['pkg_name'], build_info['version'], akind, compression)
         )
         # Special case: for xz we want to use parallel compression with pixz
-        if compression == 'xz':
-            tar_comp_opts = '-Ipixz'
-        else:
-            tar_comp_opts = '-a'
-        cmd = ['tar', 'cfp', out_file, '-C', workdir, path, tar_comp_opts]
-        if tar_extra_opts:
-            cmd.append(tar_extra_opts)
+        tar_comp_opts = '-Ipixz' if compression == "xz" else '-a'
+        tar_extra_opts = self.cfg['release']['tar_extra_opts']
+        if '--xattrs' in tar_extra_opts:
+            tar_extra_opts = tar_extra_opts.replace('--xattrs', '')
+        cmd = ['tar', 'cfp', out_file, '-C', workdir, path, tar_comp_opts] + tar_extra_opts.split()
         self.log_fd.flush()
         if self._popen(cmd, bufsize=-1).wait() != 0:
             raise XUtilsError('Something went wrong while creating the %s archive' % (kind, ))

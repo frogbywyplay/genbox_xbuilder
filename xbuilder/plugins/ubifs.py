@@ -37,7 +37,7 @@ class XBuilderUbifsPlugin(XBuilderPlugin):
         ubifs_file = '%s-%s.img' % (build_info['pkg_name'], build_info['version'])
         self.log_fd.flush()
         ret = self._popen([
-            'mkfs.ubifs', '-m', '2048', '-e', '129024', '-c', '2047', '-o',
+            '/usr/sbin/mkfs.ubifs', '-m', '2048', '-e', '129024', '-c', '2047', '-o',
             os.path.join(workdir, ubifs_file), '-r',
             os.path.join(workdir, 'root/redist')
         ],

@@ -38,7 +38,6 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
         )
         # Special case: for xz we want to use parallel compression with pixz
         tar_comp_opts = '-Ipixz' if compression == "xz" else '-a'
-        tar_extra_opts = self.cfg['release']['tar_extra_opts']
         if '--xattrs' in tar_extra_opts:
             tar_extra_opts = tar_extra_opts.replace('--xattrs', '')
         cmd = ['tar', 'cfp', out_file, '-C', workdir, path, tar_comp_opts] + tar_extra_opts.split()

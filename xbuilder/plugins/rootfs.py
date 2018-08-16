@@ -40,7 +40,7 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
         tar_comp_opts = '-Ipixz' if compression == "xz" else '-a'
         if '--xattrs' in tar_extra_opts:
             tar_extra_opts = tar_extra_opts.replace('--xattrs', '')
-        cmd = ['tar', 'cfp', out_file, '-C', workdir, path, tar_comp_opts] + tar_extra_opts.split()
+        cmd = ['tar', 'cfp', out_file, '-C', workdir, path, '--xattrs', tar_comp_opts] + tar_extra_opts.split()
         self.log_fd.flush()
         if self._popen(cmd, bufsize=-1).wait() != 0:
             raise XUtilsError('Something went wrong while creating the %s archive' % (kind, ))

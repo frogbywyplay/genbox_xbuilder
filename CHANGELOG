@@ -1,3 +1,6 @@
+2.1.11 -- 16/08/18
+- Fix release 2.1.10 where '--xattrs' option was missing in tar command.
+
 2.1.10 -- 10/08/18
 - Add --xattrs to default tar option in the rootfs plugin.
 

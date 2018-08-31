@@ -96,7 +96,13 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                         build_info['profile']])
 
                 if not exists(dest_dir):
-                        os.makedirs(dest_dir)
+                        try:
+                                os.makedirs(dest_dir)
+                        except OSError as exc: # if a race occurs, makedirs may fail with EEXIST
+                                if os.path.isdir(dest_dir) and exc.errno == errno.EEXIST:
+                                        pass
+                                else:
+                                        raise
 
 		if os.path.isfile(workdir + '/' + rootfs_file + '.gpg'):
 			rootfs_file = rootfs_file + '.gpg'

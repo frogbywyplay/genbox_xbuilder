@@ -98,7 +98,7 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                 if not exists(dest_dir):
                         try:
                                 os.makedirs(dest_dir)
-                        except OSError as exc: # if a race occurs, makedirs may fail with EEXIST
+                        except OSError,exc: # if a race occurs, makedirs may fail with EEXIST
                                 if os.path.isdir(dest_dir) and exc.errno == errno.EEXIST:
                                         pass
                                 else:

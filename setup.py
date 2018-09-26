@@ -106,12 +106,12 @@ def find_packages(dir):
 
 setup(
     name = "xbuilder",
-    version = "1.2.22",
+    version = "1.2.23",
     description = "Xbuilder tool for genbox",
     author = "Wyplay",
     author_email = "noreply@wyplay.com",
     url = "http://www.wyplay.com",
-    install_requires = ['requests', 'xtarget', 'xutils', 'xintegtools'],
+    install_requires = ['paramiko', 'requests', 'xtarget', 'xutils', 'xintegtools'],
     packages = packages,
     scripts = [
                "scripts/xbuilder",

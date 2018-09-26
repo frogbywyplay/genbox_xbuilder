@@ -60,11 +60,17 @@ class XBuilderBinpkgPlugin(XBuilderPlugin):
             raise XUtilsError('Authentication to %s@%s failed.' % (USERNAME, SERVER))
         except SSHException:
             raise XUtilsError('Unable to establish a SSH connection to %s' % SERVER)
-        finally:
+        except Exception,e:
+            raise XUtilsError('Unable to establish a SSH connection to %s / reason: %s' % (SERVER, e.strerror))
+        else:
             stdin, stdout, stderr = ssh.exec_command('touch foo && rm foo')
             if stderr.read():
                 raise XUtilsError('User %s does not have sufficient permission on server %s to create/delete files.' % (USERNAME, SERVER))
-            ssh.close()
+        finally:
+            try:
+                ssh.close()
+            except:
+                pass
 
     def postbuild(self, build_info):
 

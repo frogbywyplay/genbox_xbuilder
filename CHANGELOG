@@ -1,3 +1,6 @@
+2.1.12 -- 15/11/18
+- Set token length to 34 instead of 32 in jenkinsnotifier plugin (#119876)
+
 2.1.11 -- 16/08/18
 - Fix release 2.1.10 where '--xattrs' option was missing in tar command.
 

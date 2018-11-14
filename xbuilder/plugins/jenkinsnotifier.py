@@ -61,7 +61,7 @@ class Jenkins(object):
 
     @staticmethod
     def is_token(token):
-        if len(token) != 32:
+        if len(token) != 34:
             return False
         try:
             int(token, 16)

@@ -1,4 +1,11 @@
-9999 -- 09/08/18
+1.2.24 -- 15/11/18
+- Set token length to 34 instead of 32 in jenkinsnotifier plugin (#119876)
+
+1.2.23 -- 26/09/18
+- Fix exception handling in binpkg plugin (#119241).
+- If a race occurs while creating dest_dir, ignore makedirs failure.
+
+1.2.22 -- 09/08/18
 - Add '--xattrs' option to tar command line when generating rootfs.
     * This option is now always appended to tar command line as it does not
      impact "default" targets and it is required by "hardened" ones.

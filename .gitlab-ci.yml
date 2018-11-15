@@ -30,7 +30,7 @@ pylint:
   before_script:
     - echo -e "\nHost packages.wyplay.com\n  User jenkins" >> /root/.ssh/config
     - eval $(ssh-agent)
-    - ssh-add - <<<$SSH_PRIVATE_KEY
+    - echo -ne ${SSH_PRIVATE_KEY} | ssh-add -
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
     - echo -e "dev-python/astroid\ndev-python/pylint" >> /etc/portage/package.keywords/test
     - http_proxy=http://repos-proxy.wyplay.com:3128 emerge pylint
@@ -46,7 +46,7 @@ pyflakes:
   before_script:
     - echo -e "\nHost packages.wyplay.com\n  User jenkins" >> /root/.ssh/config
     - eval $(ssh-agent)
-    - ssh-add - <<<$SSH_PRIVATE_KEY
+    - echo -ne ${SSH_PRIVATE_KEY} | ssh-add -
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
     - http_proxy=http://repos-proxy.wyplay.com:3128 emerge flake8
     - http_proxy=http://repos-proxy.wyplay.com:3128 emerge --onlydeps xbuilder
@@ -61,7 +61,7 @@ tests:
   before_script:
     - echo -e "\nHost packages.wyplay.com\n  User jenkins" >> /root/.ssh/config
     - eval $(ssh-agent)
-    - ssh-add - <<<$SSH_PRIVATE_KEY
+    - echo -ne ${SSH_PRIVATE_KEY} | ssh-add -
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
     - http_proxy=http://repos-proxy.wyplay.com:3128 emerge --onlydeps xbuilder
     - http_proxy=http://repos-proxy.wyplay.com:3128 emerge pixz mtd-utils

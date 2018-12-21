@@ -28,7 +28,7 @@ pylint:
     - tools
   image: docker.wyplay.com/tools/genbox:18.03.2
   before_script:
-    - echo -e "\nHost packages.wyplay.com\n  User jenkins" >> /root/.ssh/config
+    - echo -e "\nHost packages.wyplay.com\n  User appli.minimal-builder" >> /root/.ssh/config
     - eval $(ssh-agent)
     - echo -ne ${SSH_PRIVATE_KEY} | ssh-add -
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
@@ -44,7 +44,7 @@ pyflakes:
     - tools
   image: docker.wyplay.com/tools/genbox:18.03.2
   before_script:
-    - echo -e "\nHost packages.wyplay.com\n  User jenkins" >> /root/.ssh/config
+    - echo -e "\nHost packages.wyplay.com\n  User appli.minimal-builder" >> /root/.ssh/config
     - eval $(ssh-agent)
     - echo -ne ${SSH_PRIVATE_KEY} | ssh-add -
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage
@@ -59,7 +59,7 @@ tests:
     - tools
   image: docker.wyplay.com/tools/genbox:18.03.2
   before_script:
-    - echo -e "\nHost packages.wyplay.com\n  User jenkins" >> /root/.ssh/config
+    - echo -e "\nHost packages.wyplay.com\n  User appli.minimal-builder" >> /root/.ssh/config
     - eval $(ssh-agent)
     - echo -ne ${SSH_PRIVATE_KEY} | ssh-add -
     - git clone --branch 18.01 --depth 1 git@gitlab.wyplay.com:genbox/overlay_gentoo.git /usr/portage

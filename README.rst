@@ -97,7 +97,7 @@ Configuration file relies on INI format and has the following available options:
 |                    | ``binpkgs``               | *None*                                  | Space separated list of package to binarize. It is disabled if PORTAGE_BINHOST|
 |                    |                           |                                         | is not set.                                                                   |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-| ``release``        | ``archive_dir``           | ``/opt/xbuilder``                       | Place/directory to release target prebuilt tarball                            |
+| ``release``        | ``archive_dir``           | ``/opt/packages/xbuilder``              | Place/directory to release target prebuilt tarball                            |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``compression``           | ``xz``                                  | Compression algorithm to use to compress rootfs. Available algorithm are:     |
 |                    |                           |                                         | ``bz2``, ``gz``, ``lzma``, ``lzo``, ``xz``.                                   |
@@ -111,6 +111,11 @@ Configuration file relies on INI format and has the following available options:
 |                    | ``tag_ebuilds``           | ``False``                               | Not used.                                                                     |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tag_overlays``          | ``False``                               | Not used.                                                                     |
++--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+| ``mirror``         | ``server``                | ``packages.wyplay.com``                 | Remote ``server`` on which prebuild has to be copied. Username is guessed from|
+|                    |                           |                                         | ``/etc/ssh/ssh_config`` configuration file.                                   |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``base_dir``              | ``/packages/xbuilder``                  | Base directory on the remote ``server`` for prebuild mirroring.               |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``mail``           | ``smtp``                  | ``mail.wyplay.com``                     | SMTP server used to send mail.                                                |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+

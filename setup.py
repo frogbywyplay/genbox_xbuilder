@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -106,12 +106,12 @@ def find_packages(dir):
 
 setup(
     name = "xbuilder",
-    version = "1.2.24",
+    version = "1.2.25",
     description = "Xbuilder tool for genbox",
     author = "Wyplay",
     author_email = "noreply@wyplay.com",
     url = "http://www.wyplay.com",
-    install_requires = ['paramiko', 'requests', 'xtarget', 'xutils', 'xintegtools'],
+    install_requires = ['paramiko', 'requests', 'xintegtools', 'xtarget', 'xutils'],
     packages = packages,
     scripts = [
                "scripts/xbuilder",

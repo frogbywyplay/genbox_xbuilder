@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -97,6 +97,7 @@ class XBuilder(object):
                             'mail' : {},
                             'notifier': {},
                             'release' : {},
+                            'scp' : {},
                             'gpg' : {},
                            }
                 self.cfg['target']['max_beta'] = int(cfg.get('target', 'max_beta', XBUILDER_MAX_BETA_TARGETS))
@@ -115,6 +116,9 @@ class XBuilder(object):
                 self.cfg['release']['tag_overlays'] = cfg.get('release', 'tag_overlays', False)
                 self.cfg['release']['tag_ebuilds'] = cfg.get('release', 'tag_ebuilds', False)
 
+                self.cfg['scp']['server'] = cfg.get('scp', 'server', XBUILDER_SCP_SERVER)
+                self.cfg['scp']['base_dir'] = cfg.get('scp', 'base_dir', XBUILDER_SCP_BASEDIR)
+
                 self.cfg['jenkinsnotifier']['uri'] = cfg.get('jenkinsnotifier', 'uri', str())
                 self.cfg['jenkinsnotifier']['username'] = cfg.get('jenkinsnotifier', 'username', str())
                 self.cfg['jenkinsnotifier']['usertoken'] = cfg.get('jenkinsnotifier', 'usertoken', str())
@@ -124,6 +128,7 @@ class XBuilder(object):
                 self.cfg['mail']['to'] = cfg.get('mail', 'to', XBUILDER_MAIL_TO)
                 self.cfg['mail']['log_size'] = int(cfg.get('mail', 'log_size', XBUILDER_MAIL_LOG_SIZE))
                 self.cfg['mail']['uri'] = cfg.get('mail', 'uri', XBUILDER_MAIL_URI)
+
                 self.cfg['notifier']['uri'] = cfg.get('notifier', 'uri', XBUILDER_NOTIFIER_URI)
                 self.cfg['gpg']['logfile'] = cfg.get('gpg', 'logfile', os.path.join(self.cfg['build']['workdir'], XBUILDER_GPG_LOGFILE))
                 self.cfg['gpg']['loglevel'] = int(cfg.get('gpg', 'loglevel', XBUILDER_GPG_LOGLEVEL))

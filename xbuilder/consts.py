@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ XBUILDER_TARGET_COMMIT = True
 XBUILDER_FEATURES = ''
 
 XBUILDER_WORKDIR = "/usr/targets/xbuilder"
-XBUILDER_ARCHIVE_DIR = "/opt/xbuilder"
+XBUILDER_ARCHIVE_DIR = "/opt/packages/xbuilder"
 XBUILDER_COMPRESSION = "xz"
 
 XBUILDER_MAIL_FROM = "builder@wyplay.com"
@@ -45,6 +45,9 @@ XBUILDER_MAIL_TO = "integration@wyplay.com"
 XBUILDER_MAIL_SMTP = "localhost"
 XBUILDER_MAIL_LOG_SIZE = 20 * 1024
 XBUILDER_MAIL_URI = "http://localhost/genbox-ng/xbuilder"
+
+XBUILDER_SCP_SERVER = "packages.wyplay.com"
+XBUILDER_SCP_BASEDIR = "/packages/xbuilder"
 
 XBUILDER_NOTIFIER_URI = "http://localhost:9999/xbuilder"
 XBUILDER_TYPES = [ "beta", "release" ]

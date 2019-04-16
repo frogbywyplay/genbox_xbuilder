@@ -24,14 +24,10 @@ import bz2
 import contextlib
 import os
 
-from subprocess import Popen
-
 from xbuilder.plugin import XBuilderPlugin
 from xbuilder.consts import XBUILDER_REPORT_FILE
 
 from xintegtools.xreport import XReport, XReportXMLOutput
-
-from xutils.xerror import XUtilsError
 
 
 @contextlib.contextmanager
@@ -85,36 +81,6 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         with contextlib.closing(bz2.BZ2File(self.report_host_file, 'w')) as hostfd:
             XReportXMLOutput(errors_only=False).process(hostxr, hostfd)
         return self.report_file, self.report_host_file
-
-    def release(self, build_info):
-        archive = self.cfg['release']['archive_dir']
-
-        dest_dir = '/'.join([
-            archive, build_info['category'], build_info['pkg_name'], build_info['version'], build_info['profile']
-        ])
-
-        try:
-            os.makedirs(dest_dir)
-        except OSError:
-            if not os.path.exists(dest_dir):
-                raise
-
-        self.info('Releasing report file')
-        self.log_fd.flush()
-        ret = Popen(['cp', self.report_file, '/'.join([dest_dir, XBUILDER_REPORT_FILE])],
-                    bufsize=-1,
-                    stdout=self.log_fd,
-                    stderr=self.log_fd,
-                    shell=False,
-                    cwd=None).wait()
-        Popen(['cp', self.report_host_file, '/'.join([dest_dir, 'host-' + XBUILDER_REPORT_FILE])],
-              bufsize=-1,
-              stdout=self.log_fd,
-              stderr=self.log_fd,
-              shell=False,
-              cwd=None).wait()
-        if ret != 0:
-            raise XUtilsError('Failed to release the report file')
 
 
 def register(builder):

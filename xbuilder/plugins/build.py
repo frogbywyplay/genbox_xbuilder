@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -21,7 +21,6 @@
 
 import os
 import readline
-from os.path import exists, realpath
 
 from subprocess import Popen, PIPE
 
@@ -80,48 +79,6 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                 if ret != 0:
                         raise XUtilsError("Target build failed, please see the log file %s" % self.log_file)
 
-        def release(self, build_info):
-                """ Releasing rootfs.tgz """
-                if build_info['success'] != True:
-                        return
-
-                archive = self.cfg['release']['archive_dir']
-                compression = self.cfg['release']['compression']
-                workdir = self.cfg['build']['workdir']
-
-                rootfs_file = '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
-                debugfs_file = '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
-                dest_dir = "/".join([archive, build_info['category'],
-                        build_info['pkg_name'], build_info['version'],
-                        build_info['profile']])
-
-                if not exists(dest_dir):
-                        try:
-                                os.makedirs(dest_dir)
-                        except OSError,exc: # if a race occurs, makedirs may fail with EEXIST
-                                if os.path.isdir(dest_dir) and exc.errno == errno.EEXIST:
-                                        pass
-                                else:
-                                        raise
-
-		if os.path.isfile(workdir + '/' + rootfs_file + '.gpg'):
-			rootfs_file = rootfs_file + '.gpg'
-			debugfs_file = debugfs_file + '.gpg'
-
-                self.info('Releasing rootfs archive')
-                self.log_fd.flush()
-                ret = Popen(['mv', workdir + '/' + rootfs_file, dest_dir + '/' + rootfs_file],
-                            bufsize=-1, stdout=self.log_fd, stderr=self.log_fd, shell=False, cwd=None).wait()
-                if ret != 0:
-                        raise XUtilsError("failed to move the rootfs archive")
-
-		if os.path.isfile ( workdir + '/' + debugfs_file ):
-	     	    self.info('Releasing debuginfo archive')
-		    self.log_fd.flush()
-		    ret = Popen(['mv', workdir + '/' + debugfs_file, dest_dir + '/' + debugfs_file],
-		        bufsize=-1, stdout=self.log_fd, stderr=self.log_fd, shell=False, cwd=None).wait()
-		    if ret != 0:
-		        raise XUtilsError("failed to move the debuginfo archive")
 
 def register(builder):
         builder.add_plugin(XBuilderBuildPlugin)

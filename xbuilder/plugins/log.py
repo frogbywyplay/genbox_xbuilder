@@ -18,47 +18,21 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #
+from __future__ import with_statement
 
-import os
-from os.path import exists, basename
-from subprocess import Popen
-
-from xutils import XUtilsError
-
+import bz2
+import contextlib
 from xbuilder.plugin import XBuilderPlugin
 
 class XBuilderLogPlugin(XBuilderPlugin):
-        def release(self, build_info):
-                archive = self.cfg['release']['archive_dir']
+    def release(self, build_info):
+        self.info('Compressing %s' % self.log_file)
 
-                dest_dir = "/".join([archive, build_info['category'],
-                        build_info['pkg_name'], build_info['version'],
-                        build_info['profile']])
+        self.log_fd.flush()
+        with open(self.log_file, 'r') as data:
+            with contextlib.closing(bz2.BZ2File('%s.bz2' % self.log_file, 'w')) as fobj:
+                fobj.write(data.read())
 
-                if not exists(dest_dir):
-                        os.makedirs(dest_dir)
-
-                if build_info['success'] != True:
-                        failed = open(dest_dir + '/failed', 'w')
-                        failed.close()
-
-                if exists(self.log_file):
-                        self.info('Releasing log file')
-                        self.log_fd.flush()
-                        dest_log = '/'.join([dest_dir, basename(self.log_file)])
-                        dest_log_bz2 = '%s.bz2' % dest_log
-                        ret = Popen(['cp', self.log_file, dest_log],
-                                    bufsize=-1, stdout=None, stderr=None, shell=False, cwd=None).wait()
-                        if ret != 0:
-                                raise XUtilsError("Failed to release the log file")
-			# compress in bzip2
-                        # 22455: Reusing version number of a failed target is not possible
-                        if exists(dest_log_bz2):
-                                os.remove(dest_log_bz2)
-			ret = Popen(['bzip2', dest_log],
-				bufsize=-1, stdout=None, stderr=None, shell=False, cwd=None).wait()
-			if ret != 0:
-				raise XUtilsError("Failed to compress log file")
 
 def register(builder):
         builder.add_plugin(XBuilderLogPlugin)

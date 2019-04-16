@@ -91,6 +91,20 @@ class XBuilderScpPlugin(XBuilderPlugin):
             self.info('Build failure: nothing to copy on %s' % self.ssh['server'])
             return
 
+        src_dir = self.cfg['build']['workdir']
+        files = [
+            '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+            '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+            '%s-%s_overlaycaches.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+            'build.log.bz2',
+            XBUILDER_REPORT_FILE,
+            'host-%s' % XBUILDER_REPORT_FILE
+        ]
+        for f in listdir(self.cfg['build']['workdir']):
+            if f.endswith('_root.tar.%s.gpg' % self.cfg['release']['compression']):
+                files = map(lambda x: '%s.gpg' % x, files)
+                break
+
         ssh = SSHClient()
         try:
             ssh.set_missing_host_key_policy(AutoAddPolicy())
@@ -106,24 +120,6 @@ class XBuilderScpPlugin(XBuilderPlugin):
         stdin, stdout, stderr = ssh.exec_command('mkdir -p %s' % dest_dir)  # pylint: disable=unused-variable
         if stderr.read():
             raise XUtilsError('Unable to create directory %s on server %s' % (dest_dir, self.ssh['server']))
-
-        src_dir = str()
-        files = [
-            '%s-%s_root.tar.xz' % (build_info['pkg_name'], build_info['version']),
-            '%s-%s_debuginfo.tar.xz' % (build_info['pkg_name'], build_info['version']),
-            '%s-%s_overlaycaches.tar.xz' % (build_info['pkg_name'], build_info['version']),
-        ]
-
-        for f in listdir(self.cfg['build']['workdir']):
-            if f.endswith('_root.tar.xz'):
-                src_dir = self.cfg['build']['workdir']
-                break
-            elif f.endswith('_root.tar.xz.gpg'):
-                src_dir = self.cfg['build']['workdir']
-                files = map(lambda x: '%s.gpg' % x, files)
-                break
-        if not src_dir:
-            src_dir = self.cfg['release']['archive_dir']
 
         try:
             sftp = SFTPClient.from_transport(ssh.get_transport())

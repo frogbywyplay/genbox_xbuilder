@@ -52,32 +52,6 @@ class Archive(object):
             output.error('No config for "Host %s" in /etc/ssh/ssh_config' % server)
             raise XUtilsError('SSH config is incomplete.')
 
-    def check_connection(self, basedir):
-        # Test SSH connection
-        ssh = SSHClient()
-        try:
-            ssh.set_missing_host_key_policy(AutoAddPolicy())
-            ssh.connect(self.server, username = self.user, allow_agent = True)
-        except BadHostKeyException, e:
-            output.error('BadHostKeyException: %s' % str(e))
-            raise XUtilsError('Server host key verification failed.')
-        except AuthenticationException, e:
-            output.error('AuthenticationException: %s' % str(e))
-            raise XUtilsError('Authentication to %s failed.' % self.server)
-        except SSHException, e:
-            output.error('SSHException: %s' % str(e))
-            raise XUtilsError('Unable to establish a SSH connection to %s' % self.server)
-        finally:
-            stdin, stdout, stderr = ssh.exec_command(  # pylint: disable=unused-variable
-                'touch %(base)s/foo && rm %(base)s/foo' % {'base': basedir}
-            )
-            if stderr.read():
-                raise XUtilsError(
-                    'User does not have sufficient permission on server %s to create/delete files.' %
-                     self.server
-                )
-            ssh.close()
-
     def upload(self, filenames = [], destination = '/'):
         def progress(filename, transferred, total):
             sys.stdout.write(' * %s transfer in progress: %02d%%.\r' % (filename, transferred * 100 / total))

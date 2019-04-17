@@ -90,7 +90,7 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                     '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
                     '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
                 ]
-                for f in listdir(self.cfg['build']['workdir']):
+                for f in os.listdir(self.cfg['build']['workdir']):
                         if f.endswith('_root.tar.%s.gpg' % self.cfg['release']['compression']):
                                 files = map(lambda x: '%s/%s.gpg' % (src_dir, x), files)
                                 break

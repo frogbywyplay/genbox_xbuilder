@@ -91,15 +91,30 @@ class Archive(object):
             output.error('SSHException: %s' % str(e))
             raise XUtilsError('Unable to establish a SSH connection to %s' % self.server)
 
-        stdin, stdout, stderr = ssh.exec_command('mkdir -p %s' % destination)  # pylint: disable=unused-variable
-        if stderr.read():
-            raise XUtilsError('Unable to create directory %s on server %s' % (destination, self.server))
-
         try:
             sftp = SFTPClient.from_transport(ssh.get_transport())
-            sftp.chdir(destination)
+            sftp.chdir('/')
         except SSHException:
-            raise XUtilsError('Unable to negotiate a SFTP session for %s' % self.ssh['server'])
+            raise XUtilsError('Unable to negotiate a SFTP session for %s' % self.server)
+
+        # create destination directory if it does not exist
+        path = realpath(destination)
+        for dir in path.split('/'):
+            try:
+                sftp.chdir(dir)
+            except IOError, e:
+                if e.errno == 2:
+                    try:
+                        sftp.mkdir(dir)
+                    except IOError, ex:
+                        output.error('Exception: %s' % str(ex))
+                        raise XUtilsError('%s is unable to create %s directory on server %s' % (self.user, dir, self.server))
+                    sftp.chdir(dir)
+                elif e.errno == 13:
+                    raise XUtilsError('%s is unable to enter directory %s on server %s' % (self.user, dir, self.server))
+                else:
+                    output.error('Exception: %s' % str(e))
+                    raise XUtilsError('Undefined error when entering %s' % dir)
 
         for f in filenames:
             filepath = realpath(f)

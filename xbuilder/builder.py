@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -34,6 +34,7 @@ from xportage.xportage import XPortage
 
 from xbuilder.consts import (
     XBUILDER_ARCHIVE_DIR,
+    XBUILDER_ARTIFACT_SERVER,
     XBUILDER_CLEAN_WORKDIR,
     XBUILDER_COMPRESSION,
     XBUILDER_DEFTYPE,
@@ -48,6 +49,7 @@ from xbuilder.consts import (
     XBUILDER_MAIL_URI,
     XBUILDER_MAX_BETA_TARGETS,
     XBUILDER_NOTIFIER_URI,
+    XBUILDER_PREBUILT_BASEDIR,
     XBUILDER_SYS_CFG,
     XBUILDER_TARGET_COMMIT,
     XBUILDER_TYPES,
@@ -152,6 +154,8 @@ class XBuilder(object):  # pylint: disable=too-many-instance-attributes
             'release': {
                 'archive_dir': cfg.get('release', 'archive_dir', XBUILDER_ARCHIVE_DIR),
                 'compression': cfg.get('release', 'compression', XBUILDER_COMPRESSION),
+                'server': cfg.get('release', 'server', XBUILDER_ARTIFACT_SERVER),
+                'basedir': cfg.get('release', 'basedir', XBUILDER_PREBUILT_BASEDIR),
                 'tar_extra_opts': cfg.get('release', 'tar_extra_opts', str()),
                 'tag_overlays': cfg.get('release', 'tag_overlays', False),
                 'tag_ebuilds': cfg.get('release', 'tag_ebuilds', False),

@@ -95,10 +95,15 @@ Configuration file relies on INI format and has the following available options:
 |                    | ``features``              | *None*                                  | Space separated list of features to enable/disable in portage. See FEATURES in|
 |                    |                           |                                         | make.conf man page for more info.                                             |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-| ``release``        | ``archive_dir``           | ``/opt/xbuilder``                       | Place/directory to release target prebuilt tarball                            |
+| ``release``        | ``archive_dir``           | ``/opt/packages/xbuilder``              | Place/directory to release target prebuilt tarball                            |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``compression``           | ``xz``                                  | Compression algorithm to use to compress rootfs. Available algorithm are:     |
 |                    |                           |                                         | ``bz2``, ``gz``, ``lzma``, ``lzo``, ``xz``.                                   |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``server``                | ``packages.wyplay.com``                 | Remote ``server`` on which prebuild has to be copied. Username is guessed from|
+|                    |                           |                                         | ``/etc/ssh/ssh_config`` configuration file.                                   |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``basedir``               | ``/packages/xbuilder``                  | Base directory on the remote ``server`` for prebuild mirroring.               |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tar_extra_opts``        | *None*                                  | Extra options to append to ``tar`` command used to generate target prebuilt   |
 |                    |                           |                                         | tarball.                                                                      |
@@ -150,6 +155,34 @@ Configuration file relies on INI format and has the following available options:
 |                    |                           |                                         | profile-checker detects that a package will be installed at an unexpected     |
 |                    |                           |                                         | version.                                                                      |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+
+Copy files on release server using ``Archive`` class
+----------------------------------------------------
+
+Instead of using ``Popen`` python call to copy or move file(s) from a location onto a NFS share, ``Archive`` class can be used. It just requires that:
+
+* artifact server has a SFTP server
+* user required to access SFTP server is defined in ``/etc/ssh/ssh_config`` on the builder
+
+Then write a similar code to be able to copy some files on the artifact server using SFTP protocol:
+
+.. code-block:: python
+
+   from xbuilder.archive import Archive
+   from xbuilder.plugin import XBuilderPlugin
+
+   class XBuilderFooPlugin(XBuilderPlugin):
+       def release(self, build_info):
+           fooFile = 'foo.txt'
+           destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
+                        build_info['pkg_name'], build_info['version'], build_info['arch']])
+
+           self.info('Uploading %s to %s' % (fooFile, self.cfg['release']['server']))
+           archive = Archive(self.cfg['release']['server'])
+￼
+           archive.upload([fooFile], destination)
+
+
 
 Jenkins notifier plugin
 =======================

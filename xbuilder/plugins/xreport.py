@@ -23,7 +23,6 @@
 import bz2
 import contextlib
 import os
-import shutil
 
 import portage
 
@@ -31,6 +30,7 @@ from xintegtools.xreport import XReport, XReportXMLOutput
 
 from xutils import XUtilsError
 
+from xbuilder.archive import Archive
 from xbuilder.plugin import XBuilderPlugin
 from xbuilder.consts import XBUILDER_REPORT_FILE
 
@@ -81,25 +81,14 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         return self.report_file, self.report_host_file
 
     def release(self, build_info):
-        dest_dir = self._archive_dir(
-            build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch']
-        )
-        self._makedirs(dest_dir, exist_ok=True)
+        sources = [ '%s/%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE),
+                    '%s/host-%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE)]
+        destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
+                build_info['pkg_name'], build_info['version'], build_info['arch']])
 
-        self.info('Releasing report file')
-        self.log_fd.flush()
-        try:
-            shutil.copy(self.report_file, os.path.join(dest_dir, XBUILDER_REPORT_FILE))
-            failed = False
-        except (IOError, OSError):
-            failed = True
-        try:
-            shutil.copy(self.report_host_file, os.path.join(dest_dir, 'host-' + XBUILDER_REPORT_FILE))
-        except (IOError, OSError):
-            pass
-        if failed:
-            raise XUtilsError('Failed to release the report file')
-
+        self.info('Uploading xreport XMLs to %s' % self.cfg['release']['server'])
+        archive = Archive(self.cfg['release']['server'])
+        archive.upload(sources, destination)
 
 def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderXreportPlugin)

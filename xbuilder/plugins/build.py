@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -20,7 +20,6 @@
 #
 
 import os
-import shutil
 import subprocess
 
 import portage
@@ -35,6 +34,7 @@ from xtarget import XTargetError
 from profilechecker.checker import ProfileChecker
 from profilechecker.package import Package, Packages, PackagesFile, PackageMaskFile, PackageUnmaskFile
 
+from xbuilder.archive import Archive
 from xbuilder.plugin import XBuilderPlugin
 
 BUILD_LOG_BUFSIZE = 1024 * 1024 * 2  # 2Mo should be enough
@@ -140,35 +140,25 @@ class XBuilderBuildPlugin(XBuilderPlugin):
     def release_success(self, build_info):
         """ Releasing rootfs.tgz """
 
-        compression = self.cfg['release']['compression']
-        workdir = self.cfg['build']['workdir']
+        src_dir = self.cfg['build']['workdir']
+        files = [
+            '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+            '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+        ]
+        for f in os.listdir(self.cfg['build']['workdir']):
+                if f.endswith('_root.tar.%s.gpg' % self.cfg['release']['compression']):
+                        files = map(lambda x: '%s/%s.gpg' % (src_dir, x), files)
+                        break
+                elif f.endswith('_root.tar.%s' % self.cfg['release']['compression']):
+                        files = map(lambda x: '%s/%s' % (src_dir, x), files)
+                        break
+        destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
+                build_info['pkg_name'], build_info['version'], build_info['arch']])
 
-        rootfs_file = '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
-        debugfs_file = '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)
-        dest_dir = self._archive_dir(
-            build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch']
-        )
-
-        self._makedirs(dest_dir, exist_ok=True)
-
-        if os.path.isfile(workdir + '/' + rootfs_file + '.gpg'):
-            rootfs_file = rootfs_file + '.gpg'
-            debugfs_file = debugfs_file + '.gpg'
-
-        self.info('Releasing rootfs archive')
-        self.log_fd.flush()
-        try:
-            shutil.move(os.path.join(workdir, rootfs_file), os.path.join(dest_dir, rootfs_file))
-        except:
-            raise XUtilsError('failed to move the rootfs archive')
-
-        if os.path.isfile(workdir + '/' + debugfs_file):
-            self.info('Releasing debuginfo archive')
-            self.log_fd.flush()
-            try:
-                shutil.move(os.path.join(workdir, debugfs_file), os.path.join(dest_dir, debugfs_file))
-            except:
-                raise XUtilsError('failed to move the debuginfo archive')
+        self.info('Uploading prebuilt to %s' % self.cfg['release']['server'])
+        archive = Archive(self.cfg['release']['server'])
+￼
+        archive.upload(files, destination)
 
 
 def register(builder):  # pragma: no cover

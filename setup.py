@@ -111,7 +111,7 @@ class FmtCommand(Command):
 
 setup(
     name='xbuilder',
-    version='2.1.12',
+    version='2.1.13',
     description='Xbuilder tool for genbox',
     author='Wyplay',
     author_email='noreply@wyplay.com',

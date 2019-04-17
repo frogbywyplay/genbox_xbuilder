@@ -102,6 +102,11 @@ Configuration file relies on INI format and has the following available options:
 |                    | ``compression``           | ``xz``                                  | Compression algorithm to use to compress rootfs. Available algorithm are:     |
 |                    |                           |                                         | ``bz2``, ``gz``, ``lzma``, ``lzo``, ``xz``.                                   |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``server``                | ``packages.wyplay.com``                 | Remote ``server`` on which prebuild has to be copied. Username is guessed from|
+|                    |                           |                                         | ``/etc/ssh/ssh_config`` configuration file.                                   |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
+|                    | ``basedir``               | ``/packages/xbuilder``                  | Base directory on the remote ``server`` for prebuild mirroring.               |
+|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tar_extra_opts``        | *None*                                  | Extra options to append to ``tar`` command used to generate target prebuilt   |
 |                    |                           |                                         | tarball.                                                                      |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
@@ -111,11 +116,6 @@ Configuration file relies on INI format and has the following available options:
 |                    | ``tag_ebuilds``           | ``False``                               | Not used.                                                                     |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``tag_overlays``          | ``False``                               | Not used.                                                                     |
-+--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-| ``mirror``         | ``server``                | ``packages.wyplay.com``                 | Remote ``server`` on which prebuild has to be copied. Username is guessed from|
-|                    |                           |                                         | ``/etc/ssh/ssh_config`` configuration file.                                   |
-|                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-|                    | ``base_dir``              | ``/packages/xbuilder``                  | Base directory on the remote ``server`` for prebuild mirroring.               |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 | ``mail``           | ``smtp``                  | ``mail.wyplay.com``                     | SMTP server used to send mail.                                                |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+

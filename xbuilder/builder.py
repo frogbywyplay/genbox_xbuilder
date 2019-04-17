@@ -97,7 +97,6 @@ class XBuilder(object):
                             'mail' : {},
                             'notifier': {},
                             'release' : {},
-                            'scp' : {},
                             'gpg' : {},
                            }
                 self.cfg['target']['max_beta'] = int(cfg.get('target', 'max_beta', XBUILDER_MAX_BETA_TARGETS))
@@ -110,14 +109,13 @@ class XBuilder(object):
                 self.cfg['build']['binpkgs'] = cfg.get('build', 'binpkgs', str()).split()
 
                 self.cfg['release']['archive_dir'] = cfg.get('release', 'archive_dir', XBUILDER_ARCHIVE_DIR)
+                self.cfg['release']['server'] = cfg.get('release', 'server', XBUILDER_ARTIFACT_SERVER)
+                self.cfg['release']['basedir'] = cfg.get('release', 'basedir', XBUILDER_PREBUILT_BASEDIR)
                 self.cfg['release']['compression'] = cfg.get('release', 'compression', XBUILDER_COMPRESSION)
                 self.cfg['release']['tar_extra_opts'] = cfg.get('release', 'tar_extra_opts', str())
                 self.cfg['release']['flat_profile'] = cfg.get('release', 'flat_profile', False)
                 self.cfg['release']['tag_overlays'] = cfg.get('release', 'tag_overlays', False)
                 self.cfg['release']['tag_ebuilds'] = cfg.get('release', 'tag_ebuilds', False)
-
-                self.cfg['scp']['server'] = cfg.get('scp', 'server', XBUILDER_SCP_SERVER)
-                self.cfg['scp']['base_dir'] = cfg.get('scp', 'base_dir', XBUILDER_SCP_BASEDIR)
 
                 self.cfg['jenkinsnotifier']['uri'] = cfg.get('jenkinsnotifier', 'uri', str())
                 self.cfg['jenkinsnotifier']['username'] = cfg.get('jenkinsnotifier', 'username', str())

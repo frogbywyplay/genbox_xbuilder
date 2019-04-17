@@ -20,8 +20,8 @@
 #
 from __future__ import with_statement
 
-from os import stat, listdir
-from os.path import exists, realpath
+from os import stat
+from os.path import exists, realpath, basename
 from functools import partial
 import sys
 
@@ -40,108 +40,79 @@ from paramiko.ssh_exception import AuthenticationException, BadHostKeyException,
 
 from xutils import output, XUtilsError
 
-from xbuilder.plugin import XBuilderPlugin
-
-
-class XBuilderScpPlugin(XBuilderPlugin):
-    def __init__(self, cfg, info, log_fd, log_file):
-        super(XBuilderScpPlugin, self).__init__(cfg, info, log_fd, log_file)
-        self.ssh = self.cfg['scp'].copy()
-
+class Archive(object):
+    def __init__(self, server):
+        self.server = server
         config = SSHConfig()
         with open('/etc/ssh/ssh_config', 'r') as f:
             config.parse(f)
-        if 'user' in config.lookup(self.ssh['server']):
-            self.ssh['user'] = config.lookup(self.ssh['server'])['user']
+        if 'user' in config.lookup(server):
+            self.user = config.lookup(server)['user']
         else:
-            output.error('No config for "Host %s" in /etc/ssh/ssh_config' % self.ssh['server'])
+            output.error('No config for "Host %s" in /etc/ssh/ssh_config' % server)
             raise XUtilsError('SSH config is incomplete.')
 
+    def check_connection(self, basedir):
         # Test SSH connection
         ssh = SSHClient()
         try:
             ssh.set_missing_host_key_policy(AutoAddPolicy())
-            ssh.connect(self.ssh['server'], username = self.ssh['user'], allow_agent = True, compress = True)
+            ssh.connect(self.server, username = self.user, allow_agent = True)
         except BadHostKeyException, e:
             output.error('BadHostKeyException: %s' % str(e))
             raise XUtilsError('Server host key verification failed.')
         except AuthenticationException, e:
             output.error('AuthenticationException: %s' % str(e))
-            raise XUtilsError('Authentication to %s failed.' % self.ssh['server'])
+            raise XUtilsError('Authentication to %s failed.' % self.server)
         except SSHException, e:
             output.error('SSHException: %s' % str(e))
-            raise XUtilsError('Unable to establish a SSH connection to %s' % self.ssh['server'])
+            raise XUtilsError('Unable to establish a SSH connection to %s' % self.server)
         finally:
             stdin, stdout, stderr = ssh.exec_command(  # pylint: disable=unused-variable
-                'touch %s/foo && rm %s/foo' % (self.ssh['base_dir'], self.ssh['base_dir'])
+                'touch %(base)s/foo && rm %(base)s/foo' % {'base': basedir}
             )
             if stderr.read():
                 raise XUtilsError(
                     'User does not have sufficient permission on server %s to create/delete files.' %
-                     self.ssh['server']
+                     self.server
                 )
             ssh.close()
 
-    def release(self, build_info):
+    def upload(self, filenames = [], destination = '/'):
         def progress(filename, transferred, total):
             sys.stdout.write(' * %s transfer in progress: %02d%%.\r' % (filename, transferred * 100 / total))
             sys.stdout.flush()
 
-        if not build_info['success']:
-            self.info('Build failure: nothing to copy on %s' % self.ssh['server'])
-            return
-
-        src_dir = self.cfg['build']['workdir']
-        files = [
-            '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
-            '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
-            '%s-%s_overlaycaches.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
-            'build.log.bz2',
-            XBUILDER_REPORT_FILE,
-            'host-%s' % XBUILDER_REPORT_FILE
-        ]
-        for f in listdir(self.cfg['build']['workdir']):
-            if f.endswith('_root.tar.%s.gpg' % self.cfg['release']['compression']):
-                files = map(lambda x: '%s.gpg' % x, files)
-                break
-
         ssh = SSHClient()
         try:
             ssh.set_missing_host_key_policy(AutoAddPolicy())
-            ssh.connect(self.ssh['server'], username = self.ssh['user'], allow_agent = True, compress = True)
+            ssh.connect(self.server, username = self.user, allow_agent = True)
         except SSHException, e:
             output.error('SSHException: %s' % str(e))
-            raise XUtilsError('Unable to establish a SSH connection to %s' % self.ssh['server'])
+            raise XUtilsError('Unable to establish a SSH connection to %s' % self.server)
 
-        dest_dir = '/'.join([
-            self.ssh['base_dir'], build_info['category'], build_info['pkg_name'], build_info['version'],
-            build_info['arch']
-        ])
-        stdin, stdout, stderr = ssh.exec_command('mkdir -p %s' % dest_dir)  # pylint: disable=unused-variable
+        stdin, stdout, stderr = ssh.exec_command('mkdir -p %s' % destination)  # pylint: disable=unused-variable
         if stderr.read():
-            raise XUtilsError('Unable to create directory %s on server %s' % (dest_dir, self.ssh['server']))
+            raise XUtilsError('Unable to create directory %s on server %s' % (destination, self.server))
 
         try:
             sftp = SFTPClient.from_transport(ssh.get_transport())
-            sftp.chdir(dest_dir)
+            sftp.chdir(destination)
         except SSHException:
             raise XUtilsError('Unable to negotiate a SFTP session for %s' % self.ssh['server'])
 
-        for f in files:
-            filepath = realpath(src_dir + '/' + f)
+        for f in filenames:
+            filepath = realpath(f)
+            f = basename(filepath)
             if not exists(filepath):
-                self.info('%s not found => skip it.' % f)
+                output.warn('%s not found => skip it.' % f)
                 continue
             my_callback = partial(progress, f)
             remote_attr = sftp.put(filepath, f, callback=my_callback)
             if stat(filepath).st_size == remote_attr.st_size:
-                self.info('%s successfully copied on server %s.' % (f, self.ssh['server']))
+                output.info('%s successfully copied on server %s.' % (f, self.server))
             else:
-                raise XUtilsError('Copy of %s on server %s is corrupted.' % (f, self.ssh['server']))
+                raise XUtilsError('Copy of %s on server %s is corrupted.' % (f, self.server))
 
         sftp.close()
         ssh.close()
-
-
-def register(builder):  # pragma: no cover
-    builder.add_plugin(XBuilderScpPlugin)

@@ -29,6 +29,7 @@ from xutils.ebuild import ebuild_factory
 
 from xtarget import XTargetError
 
+from xbuilder.archive import Archive
 from xbuilder.plugin import XBuilderPlugin
 
 BUILD_LOG_BUFSIZE = 1024 * 1024 * 2 # 2Mo should be enough
@@ -78,6 +79,30 @@ class XBuilderBuildPlugin(XBuilderPlugin):
                             cwd=None).wait()
                 if ret != 0:
                         raise XUtilsError("Target build failed, please see the log file %s" % self.log_file)
+
+        def release(self, build_info):
+                if not build_info['success']:
+                        self.info('Build failure: nothing to copy on %s' % self.cfg['release']['server'])
+                        return
+
+                src_dir = self.cfg['build']['workdir']
+                files = [
+                    '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+                    '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+                ]
+                for f in listdir(self.cfg['build']['workdir']):
+                        if f.endswith('_root.tar.%s.gpg' % self.cfg['release']['compression']):
+                                files = map(lambda x: '%s/%s.gpg' % (src_dir, x), files)
+                                break
+                        elif f.endswith('_root.tar.%s' % self.cfg['release']['compression']):
+                                files = map(lambda x: '%s/%s' % (src_dir, x), files)
+                                break
+                destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
+                        build_info['pkg_name'], build_info['version'], build_info['arch']])
+
+                self.info('Uploading prebuilt to %s' % self.cfg['release']['server'])
+                archive = Archive(self.cfg['release']['server'])
+                archive.upload(files, destination)
 
 
 def register(builder):

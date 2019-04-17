@@ -46,8 +46,8 @@ XBUILDER_MAIL_SMTP = "localhost"
 XBUILDER_MAIL_LOG_SIZE = 20 * 1024
 XBUILDER_MAIL_URI = "http://localhost/genbox-ng/xbuilder"
 
-XBUILDER_SCP_SERVER = "packages.wyplay.com"
-XBUILDER_SCP_BASEDIR = "/packages/xbuilder"
+XBUILDER_ARTIFACT_SERVER = "packages.wyplay.com"
+XBUILDER_PREBUILT_BASEDIR = "/packages/xbuilder"
 
 XBUILDER_NOTIFIER_URI = "http://localhost:9999/xbuilder"
 XBUILDER_TYPES = [ "beta", "release" ]

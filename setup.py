@@ -1,5 +1,5 @@
 #!/usr/bin/python2
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify

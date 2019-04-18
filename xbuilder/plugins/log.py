@@ -30,8 +30,10 @@ from xbuilder.plugin import XBuilderPlugin
 class XBuilderLogPlugin(XBuilderPlugin):
     def release(self, build_info):
         bz2file = '%s.bz2' % self.log_file
-        destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
-                                build_info['pkg_name'], build_info['version'], build_info['arch']])
+        destination = '/'.join([
+            self.cfg['release']['basedir'], build_info['category'], build_info['pkg_name'], build_info['version'],
+            build_info['arch']
+        ])
 
         self.info('Compressing %s' % self.log_file)
         self.log_fd.flush()

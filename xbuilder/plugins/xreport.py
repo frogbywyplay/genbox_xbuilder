@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #
-
 
 import bz2
 import contextlib
@@ -79,14 +78,19 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         return self.report_file, self.report_host_file
 
     def release(self, build_info):
-        sources = ['%s/%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE),
-                   '%s/host-%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE)]
-        destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
-                                build_info['pkg_name'], build_info['version'], build_info['arch']])
+        sources = [
+            '%s/%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE),
+            '%s/host-%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE)
+        ]
+        destination = '/'.join([
+            self.cfg['release']['basedir'], build_info['category'], build_info['pkg_name'], build_info['version'],
+            build_info['arch']
+        ])
 
         self.info('Uploading xreport XMLs to %s' % self.cfg['release']['server'])
         archive = Archive(self.cfg['release']['server'])
         archive.upload(sources, destination)
+
 
 def register(builder):  # pragma: no cover
     builder.add_plugin(XBuilderXreportPlugin)

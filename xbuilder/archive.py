@@ -29,6 +29,7 @@ from paramiko.ssh_exception import SSHException
 
 from xutils import output, XUtilsError
 
+
 class Archive(object):
     def __init__(self, server):
         self.server = server
@@ -71,12 +72,14 @@ class Archive(object):
                         sftp.mkdir(directory)
                     except IOError, ex:
                         output.error('Exception: %s' % str(ex))
-                        raise XUtilsError('%s is unable to create %s directory on server %s' %
-                                          (self.user, directory, self.server))
+                        raise XUtilsError(
+                            '%s is unable to create %s directory on server %s' % (self.user, directory, self.server)
+                        )
                     sftp.chdir(directory)
                 elif e.errno == 13:
-                    raise XUtilsError('%s is unable to enter directory %s on server %s' %
-                                      (self.user, directory, self.server))
+                    raise XUtilsError(
+                        '%s is unable to enter directory %s on server %s' % (self.user, directory, self.server)
+                    )
                 else:
                     output.error('Exception: %s' % str(e))
                     raise XUtilsError('Undefined error when entering %s' % directory)

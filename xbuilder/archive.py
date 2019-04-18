@@ -25,7 +25,7 @@ import sys
 
 from paramiko import AutoAddPolicy, SFTPClient, SSHClient
 from paramiko.config import SSHConfig
-from paramiko.ssh_exception import AuthenticationException, BadHostKeyException, SSHException
+from paramiko.ssh_exception import SSHException
 
 from xutils import output, XUtilsError
 
@@ -41,7 +41,7 @@ class Archive(object):
             output.error('No config for "Host %s" in /etc/ssh/ssh_config' % server)
             raise XUtilsError('SSH config is incomplete.')
 
-    def upload(self, filenames = [], destination = '/'):
+    def upload(self, filenames=list(), destination='/'):
         def progress(filename, transferred, total):
             sys.stdout.write(' * %s transfer in progress: %02d%%.\r' % (filename, transferred * 100 / total))
             sys.stdout.flush()
@@ -49,7 +49,7 @@ class Archive(object):
         ssh = SSHClient()
         try:
             ssh.set_missing_host_key_policy(AutoAddPolicy())
-            ssh.connect(self.server, username = self.user, allow_agent = True)
+            ssh.connect(self.server, username=self.user, allow_agent=True)
         except SSHException, e:
             output.error('SSHException: %s' % str(e))
             raise XUtilsError('Unable to establish a SSH connection to %s' % self.server)
@@ -62,22 +62,24 @@ class Archive(object):
 
         # create destination directory if it does not exist
         path = realpath(destination)
-        for dir in path.split('/'):
+        for directory in path.split('/'):
             try:
-                sftp.chdir(dir)
+                sftp.chdir(directory)
             except IOError, e:
                 if e.errno == 2:
                     try:
-                        sftp.mkdir(dir)
+                        sftp.mkdir(directory)
                     except IOError, ex:
                         output.error('Exception: %s' % str(ex))
-                        raise XUtilsError('%s is unable to create %s directory on server %s' % (self.user, dir, self.server))
-                    sftp.chdir(dir)
+                        raise XUtilsError('%s is unable to create %s directory on server %s' %
+                                          (self.user, directory, self.server))
+                    sftp.chdir(directory)
                 elif e.errno == 13:
-                    raise XUtilsError('%s is unable to enter directory %s on server %s' % (self.user, dir, self.server))
+                    raise XUtilsError('%s is unable to enter directory %s on server %s' %
+                                      (self.user, directory, self.server))
                 else:
                     output.error('Exception: %s' % str(e))
-                    raise XUtilsError('Undefined error when entering %s' % dir)
+                    raise XUtilsError('Undefined error when entering %s' % directory)
 
         for f in filenames:
             filepath = realpath(f)

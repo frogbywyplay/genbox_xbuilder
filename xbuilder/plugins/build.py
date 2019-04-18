@@ -142,22 +142,23 @@ class XBuilderBuildPlugin(XBuilderPlugin):
 
         src_dir = self.cfg['build']['workdir']
         files = [
-            '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
-            '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'], self.cfg['release']['compression']),
+            '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'],
+                                   self.cfg['release']['compression']),
+            '%s-%s_debuginfo.tar.%s' % (build_info['pkg_name'], build_info['version'],
+                                        self.cfg['release']['compression'])
         ]
         for f in os.listdir(self.cfg['build']['workdir']):
-                if f.endswith('_root.tar.%s.gpg' % self.cfg['release']['compression']):
-                        files = map(lambda x: '%s/%s.gpg' % (src_dir, x), files)
-                        break
-                elif f.endswith('_root.tar.%s' % self.cfg['release']['compression']):
-                        files = map(lambda x: '%s/%s' % (src_dir, x), files)
-                        break
+            if f.endswith('_root.tar.%s.gpg' % self.cfg['release']['compression']):
+                files = ['%s/%s.gpg' % (src_dir, x) for x in files]
+                break
+            elif f.endswith('_root.tar.%s' % self.cfg['release']['compression']):
+                files = ['%s/%s' % (src_dir, x) for x in files]
+                break
         destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
-                build_info['pkg_name'], build_info['version'], build_info['arch']])
+                                build_info['pkg_name'], build_info['version'], build_info['arch']])
 
         self.info('Uploading prebuilt to %s' % self.cfg['release']['server'])
         archive = Archive(self.cfg['release']['server'])
-￼
         archive.upload(files, destination)
 
 

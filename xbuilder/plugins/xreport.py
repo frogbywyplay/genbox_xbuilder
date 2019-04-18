@@ -28,8 +28,6 @@ import portage
 
 from xintegtools.xreport import XReport, XReportXMLOutput
 
-from xutils import XUtilsError
-
 from xbuilder.archive import Archive
 from xbuilder.plugin import XBuilderPlugin
 from xbuilder.consts import XBUILDER_REPORT_FILE
@@ -81,10 +79,10 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         return self.report_file, self.report_host_file
 
     def release(self, build_info):
-        sources = [ '%s/%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE),
-                    '%s/host-%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE)]
+        sources = ['%s/%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE),
+                   '%s/host-%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE)]
         destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
-                build_info['pkg_name'], build_info['version'], build_info['arch']])
+                                build_info['pkg_name'], build_info['version'], build_info['arch']])
 
         self.info('Uploading xreport XMLs to %s' % self.cfg['release']['server'])
         archive = Archive(self.cfg['release']['server'])

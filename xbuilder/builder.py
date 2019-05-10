@@ -20,6 +20,8 @@
 #
 
 import os
+import sys
+
 from os.path import realpath, dirname, isfile, exists, expanduser
 from subprocess import Popen
 
@@ -65,6 +67,8 @@ class XBuilder(object):
 
                 self.log_file = '%s/%s' % (workdir, XBUILDER_LOGFILE)
                 self.log_fd = open(self.log_file, 'a')
+                self.stderr = sys.stderr
+                sys.stderr = self.log_fd
 
                 self.target_builder = XTargetBuilder(arch=r'*', stdout=self.log_fd, stderr=self.log_fd)
                 
@@ -80,6 +84,7 @@ class XBuilder(object):
 
         def __del__(self):
                 if (self.log_fd):
+                        sys.stderr = self.stderr
                         self.log_fd.close()
 
         def config(self, config_files):

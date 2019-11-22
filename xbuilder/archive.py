@@ -20,7 +20,7 @@
 #
 from __future__ import with_statement
 
-from os import stat
+from os import stat, getenv
 from os.path import exists, realpath, basename
 from functools import partial
 import sys
@@ -48,7 +48,9 @@ class Archive(object):
             config.parse(f)
         if 'user' in config.lookup(server):
             self.user = config.lookup(server)['user']
-        else:
+        if getenv('PORTAGE_SSH_USER'):
+            self.user = getenv('PORTAGE_SSH_USER')
+        if not self.user:
             output.error('No config for "Host %s" in /etc/ssh/ssh_config' % server)
             raise XUtilsError('SSH config is incomplete.')
 

@@ -135,6 +135,7 @@ class XBuilder(object):
                 self.cfg['notifier']['uri'] = cfg.get('notifier', 'uri', XBUILDER_NOTIFIER_URI)
                 self.cfg['gpg']['logfile'] = cfg.get('gpg', 'logfile', os.path.join(self.cfg['build']['workdir'], XBUILDER_GPG_LOGFILE))
                 self.cfg['gpg']['loglevel'] = int(cfg.get('gpg', 'loglevel', XBUILDER_GPG_LOGLEVEL))
+                self.cfg['xreport']['server'] = cfg.get('xreport', 'server', XBUILDER_XREPORT_SERVER)
                 del cfg
 
         def info(self, msg, eol=True):

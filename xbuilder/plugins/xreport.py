@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2020 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 #
 # xbuilder is free software: you can redistribute it and/or modify
@@ -23,6 +23,9 @@ from __future__ import absolute_import, with_statement
 import bz2
 import contextlib
 import os
+import smtplib
+
+from email.mime.text import MIMEText
 
 from xbuilder.archive import Archive
 from xbuilder.consts import XBUILDER_REPORT_FILE
@@ -61,8 +64,23 @@ def reload_portage_and_gentoolkit():
     reload(gentoolkit.package)
 
 
+def notify_by_mail(cfg, data):
+    body  = 'An error occured while submitting XML reports to the bumpmanager service:\n%s\n' % data
+    body += 'Do not forget to add the target once the issue is fixed.'
+    msg = MIMEText(body)
+    msg['From'] = os.getenv('MAIL_FROM', cfg['mail']['from'])
+    msg['To'] = 'pmo@wyplay.com'
+    msg['Subject'] = 'Issue with %s' % cfg['xreport']['server']
+
+    s = smtplib.SMTP(cfg['mail']['smtp'])
+    s.sendmail(msg['From'], msg['To'], msg.as_string())
+    s.quit()
+
 class XBuilderXreportPlugin(XBuilderPlugin):
     def postbuild(self, build_info):
+        if not build_info['success']:
+            return None
+
         self.info('Generating report with xreport')
         workdir = self.cfg['build']['workdir']
         rootdir = os.path.join(workdir, 'root/')
@@ -84,12 +102,22 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         return self.report_file, self.report_host_file
 
     def release(self, build_info):
+        if not build_info['success']:
+            return None
+
         sources = [ '%s/%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE),
                     '%s/host-%s' % (self.cfg['build']['workdir'], XBUILDER_REPORT_FILE)]
         destination = '/'.join([self.cfg['release']['basedir'], build_info['category'],
                 build_info['pkg_name'], build_info['version'], build_info['arch']])
 
-        self.info('Uploading xreport XMLs to %s' % self.cfg['release']['server'])
+        self.info('Submit XML reports to %s' % self.cfg['xreport']['server'])
+        url = '%s/%s/%s/%s/%s/%s' % (self.cfg['xreport']['server'], '/api/prebuilt/', build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch'])
+        r = requests.post(url, files={'target': sources[0], 'host': sources[1]})
+        if not r.ok:
+            self.error('An unexpected error occured while submitting XML reports: %d' % r.status_code)
+            self.error(r.text)
+            notify_by_mail(self.cfg, r.text)
+        self.info('Uploading XML reports to %s' % self.cfg['release']['server'])
         archive = Archive(self.cfg['release']['server'])
         archive.upload(sources, destination)
 

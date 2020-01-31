@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2020 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -55,4 +55,4 @@ XBUILDER_TYPES = [ "beta", "release" ]
 XBUILDER_GPG_LOGFILE = 'gpg.log'
 XBUILDER_GPG_LOGLEVEL = 20 # logging.INFO
 
-XBUILDER_XREPORT_SERVER="https://bumpmanager.wyplay.com/"
+XBUILDER_XREPORT_SERVER="https://bumpmanager.wyplay.com"

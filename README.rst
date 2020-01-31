@@ -145,7 +145,7 @@ Configuration file relies on INI format and has the following available options:
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``loglevel``              | ``20``                                  | GnuPG logger verbosity level.                                                 |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
-| ``xreport``        | ``server``                | ``https://bumpmanager.wyplay.com``      | Server where to submit the HTTP POST request.                                 |
+| ``xreport``        | ``server``                | ``https://bumpmanager.wyplay.com``      | Server *(no trailing /)* where to submit the HTTP POST request.               |
 +--------------------+---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 
 

@@ -23,6 +23,7 @@ from __future__ import absolute_import, with_statement
 import bz2
 import contextlib
 import os
+import requests
 import smtplib
 
 from email.mime.text import MIMEText
@@ -32,6 +33,8 @@ from xbuilder.consts import XBUILDER_REPORT_FILE
 from xbuilder.plugin import XBuilderPlugin
 
 from xintegtools.xreport import XReport, XReportXMLOutput
+
+from xutils import output
 
 
 @contextlib.contextmanager
@@ -65,7 +68,7 @@ def reload_portage_and_gentoolkit():
 
 
 def notify_by_mail(cfg, data):
-    body  = 'An error occured while submitting XML reports to the bumpmanager service:\n%s\n' % data
+    body  = 'An error occured while submitting XML reports to the bumpmanager service:\n\n%s\n\n' % data
     body += 'Do not forget to add the target once the issue is fixed.'
     msg = MIMEText(body)
     msg['From'] = os.getenv('MAIL_FROM', cfg['mail']['from'])
@@ -111,12 +114,14 @@ class XBuilderXreportPlugin(XBuilderPlugin):
                 build_info['pkg_name'], build_info['version'], build_info['arch']])
 
         self.info('Submit XML reports to %s' % self.cfg['xreport']['server'])
-        url = '%s/%s/%s/%s/%s/%s' % (self.cfg['xreport']['server'], '/api/prebuilt/', build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch'])
-        r = requests.post(url, files={'target': sources[0], 'host': sources[1]})
-        if not r.ok:
-            self.error('An unexpected error occured while submitting XML reports: %d' % r.status_code)
-            self.error(r.text)
-            notify_by_mail(self.cfg, r.text)
+        url = '%s/api/prebuilt/%s/%s/%s/%s' % (self.cfg['xreport']['server'], build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch'])
+        with open(sources[0], 'rb') as target:
+            with open(sources[1], 'rb') as host:
+                r = requests.post(url, files={'target': target, 'host': host})
+                if not r.ok:
+                    output.error('An unexpected error occured while submitting XML reports: HTTP error %d' % r.status_code)
+                    output.error(r.text)
+                    notify_by_mail(self.cfg, r.text)
         self.info('Uploading XML reports to %s' % self.cfg['release']['server'])
         archive = Archive(self.cfg['release']['server'])
         archive.upload(sources, destination)

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2019 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2020 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -103,6 +103,7 @@ class XBuilder(object):
                             'notifier': {},
                             'release' : {},
                             'gpg' : {},
+                            'xreport' : {}
                            }
                 self.cfg['target']['max_beta'] = int(cfg.get('target', 'max_beta', XBUILDER_MAX_BETA_TARGETS))
                 self.cfg['target']['commit'] = cfg.get('target', 'commit', XBUILDER_TARGET_COMMIT)

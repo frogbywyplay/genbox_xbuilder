@@ -117,11 +117,16 @@ class XBuilderXreportPlugin(XBuilderPlugin):
         url = '%s/api/prebuilt/%s/%s/%s/%s' % (self.cfg['xreport']['server'], build_info['category'], build_info['pkg_name'], build_info['version'], build_info['arch'])
         with open(sources[0], 'rb') as target:
             with open(sources[1], 'rb') as host:
-                r = requests.post(url, files={'target': target, 'host': host})
-                if not r.ok:
-                    output.error('An unexpected error occured while submitting XML reports: HTTP error %d' % r.status_code)
-                    output.error(r.text)
-                    notify_by_mail(self.cfg, r.text)
+                try:
+                    r = requests.post(url, files={'target': target, 'host': host})
+                except requests.exceptions.RequestException, e:
+                    output.error('%s' % e.message)
+                    notify_by_mail(self.cfg, '%s' % e.message)
+                else:
+                    if not r.ok:
+                        output.error('An unexpected error occured while submitting XML reports: HTTP error %d' % r.status_code)
+                        output.error(r.text)
+                        notify_by_mail(self.cfg, r.text)
         self.info('Uploading XML reports to %s' % self.cfg['release']['server'])
         archive = Archive(self.cfg['release']['server'])
         archive.upload(sources, destination)

@@ -55,4 +55,4 @@ XBUILDER_TYPES = [ "beta", "release" ]
 XBUILDER_GPG_LOGFILE = 'gpg.log'
 XBUILDER_GPG_LOGLEVEL = 20 # logging.INFO
 
-XBUILDER_XREPORT_SERVER="https://bumpmanager.wyplay.com"
+XBUILDER_XREPORT_SERVER="http://bumpmanager.wyplay.com"

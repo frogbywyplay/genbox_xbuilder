@@ -2,17 +2,17 @@
 #
 # Copyright (C) 2006-2020 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
-# 
+#
 # xbuilder is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # xbuilder is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; see file COPYING.
 # If not, see <http://www.gnu.org/licenses/>.
@@ -42,13 +42,13 @@ class XBuilder(object):
                      config=None,
                      type=XBUILDER_DEFTYPE):
                 self.log_fd = None
-                self.build_info = {} 
+                self.build_info = {}
                 self.plugin_list = []
 
                 if config and not isfile(config):
                         raise XUtilsError("Can't find config file %s" % config)
 
-                self.type = type 
+                self.type = type
                 if type not in XBUILDER_TYPES:
                         raise XUtilsError("Unkown build type %s" % type)
 
@@ -71,7 +71,7 @@ class XBuilder(object):
                 sys.stderr = self.log_fd
 
                 self.target_builder = XTargetBuilder(arch=r'*', stdout=self.log_fd, stderr=self.log_fd)
-                
+
                 self.info('Loading plugins:', eol=False)
                 for plugin in self.cfg['build']['plugins']:
                         self.out('%s' % plugin, eol=False)
@@ -114,7 +114,6 @@ class XBuilder(object):
                 self.cfg['build']['features'] = cfg.get('build', 'features', XBUILDER_FEATURES)
                 self.cfg['build']['binpkgs'] = cfg.get('build', 'binpkgs', str()).split()
 
-                self.cfg['release']['archive_dir'] = cfg.get('release', 'archive_dir', XBUILDER_ARCHIVE_DIR)
                 self.cfg['release']['server'] = cfg.get('release', 'server', XBUILDER_ARTIFACT_SERVER)
                 self.cfg['release']['basedir'] = cfg.get('release', 'basedir', XBUILDER_PREBUILT_BASEDIR)
                 self.cfg['release']['compression'] = cfg.get('release', 'compression', XBUILDER_COMPRESSION)
@@ -296,7 +295,7 @@ class XBuilder(object):
 
                 for p in self.plugin_list:
                         p.postbuild(self.build_info)
-                
+
         def release(self):
                 self.info('Running release step')
                 if not 'pkg_name' in self.build_info:
@@ -307,4 +306,3 @@ class XBuilder(object):
 
         def cleanup(self):
                 pass
-

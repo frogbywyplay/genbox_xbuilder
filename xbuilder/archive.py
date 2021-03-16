@@ -20,9 +20,11 @@
 #
 from __future__ import with_statement
 
-from os import stat, getenv
-from os.path import exists, realpath, basename
+from os import getenv, makedirs, stat
+from os.path import basename, exists, isdir, realpath
 from functools import partial
+
+import shutil
 import sys
 
 try:
@@ -43,6 +45,8 @@ from xutils import output, XUtilsError
 class Archive(object):
     def __init__(self, server):
         self.server = server
+        if self.server == 'localhost':
+            return
         config = SSHConfig()
         with open('/etc/ssh/ssh_config', 'r') as f:
             config.parse(f)
@@ -55,6 +59,23 @@ class Archive(object):
             raise XUtilsError('SSH config is incomplete.')
 
     def upload(self, filenames = [], destination = '/'):
+        if self.server == 'localhost':
+            return self._local_copy(filenames, destination)
+        return self._sftp_upload(filenames, destination)
+
+    def _local_copy(self, filenames, destination):
+        if not exists(destination):
+            try:
+                makedirs(destination)
+            except OSError,exc: # if a race occurs, makedirs may fail with EEXIST
+                if isdir(destination) and exc.errno == errno.EEXIST:
+                    pass
+                else:
+                    raise
+        for filename in filenames:
+            shutil.copy2(filename, destination)
+
+    def _sftp_upload(self, filenames, destination):
         def progress(filename, transferred, total):
             sys.stdout.write(' * %s transfer in progress: %02d%%.\r' % (filename, transferred * 100 / total))
             sys.stdout.flush()

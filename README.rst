@@ -104,6 +104,9 @@ Configuration file relies on INI format and has the following available options:
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``server``                | ``packages.wyplay.com``                 | Remote ``server`` on which prebuild has to be copied. Username is guessed from|
 |                    |                           |                                         | ``/etc/ssh/ssh_config`` configuration file.                                   |
+|                    |                           |                                         | If ``server`` is set to ``localhost`` then prebuild is copied in local        |
+|                    |                           |                                         | directory defined by ``basedir`` instead of to be uploaded in remote          |
+|                    |                           |                                         | server.                                                                       |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+
 |                    | ``basedir``               | ``/packages/xbuilder``                  | Base directory on the remote ``server`` for prebuild mirroring.               |
 |                    +---------------------------+-----------------------------------------+-------------------------------------------------------------------------------+

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2006-2018 Wyplay, All Rights Reserved.
+# Copyright (C) 2006-2021 Wyplay, All Rights Reserved.
 # This file is part of xbuilder.
 # 
 # xbuilder is free software: you can redistribute it and/or modify
@@ -82,9 +82,9 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
                             stdout=self.log_fd,
                             stderr=self.log_fd,
                             shell=False, cwd=None).wait()
-                shutil.rmtree(workdir + '/root/usr/lib/debug')
                 if ret != 0:
                     raise XUtilsError("Something went wrong while creating the debuginfo archive")
+                shutil.rmtree(workdir + '/root/usr/lib/debug')
 
             self.info('Creating rootfs archive')
             rootfs_file = '%s-%s_root.tar.%s' % (build_info['pkg_name'], build_info['version'], compression)

@@ -60,8 +60,16 @@ class XBuilderRootfsPlugin(XBuilderPlugin):
                         raise XUtilsError("Something went wrong while trying to clean the builddir")
             mounts.close()
         else:
-            """ Special case: for xz we want to use parallel compression with pixz """
-            tar_comp_opts = '-Ipixz' if compression == "xz" else '-a'
+            # Special case: for xz we want to use parallel compression with pixz
+            if compression == "xz":
+                tar_comp_opts = '-Ipixz'
+                # pixz is bugged and does not support too high parallelisation
+                # e.g. pixz -9 -p4 <filename> => Error creating block encoder
+                # for default compression level, the limit is 27
+                if os.sysconf('SC_NPROCESSORS_ONLN') > 27:
+                    tar_comp_opts = '-Ipixz -p27'
+            else:
+                tar_comp_opts = '-a'
             tar_extra_opts = self.cfg['release']['tar_extra_opts']
             if '--xattrs' in tar_extra_opts: tar_extra_opts = tar_extra_opts.replace('--xattrs', '')
 
